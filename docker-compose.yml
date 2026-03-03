@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: postgres-biblioteca
+    environment:
+      POSTGRES_DB: biblioteca
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  backend:
+    build: .
+    container_name: backend-biblioteca
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+volumes:
+  postgres-data:

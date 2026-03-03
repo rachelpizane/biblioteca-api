@@ -1,3 +1,8 @@
 spring:
   application:
     name: biblioteca
+  datasource:
+    url: jdbc:postgresql://postgres:5432/biblioteca
+    username: user
+    password: password
+    driver-class-name: org.postgresql.Driver
