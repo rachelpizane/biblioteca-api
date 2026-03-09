@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS tb_autor (
+      id UUID PRIMARY KEY,
+      cpf VARCHAR(11) NOT NULL UNIQUE,
+      nome VARCHAR(200) NOT NULL,
+      sexo VARCHAR(20) CHECK (sexo IN ('MASCULINO', 'FEMININO', 'OUTRO')),
+      ano_nascimento INTEGER NOT NULL
+);
