@@ -3,6 +3,7 @@ package edu.rachel.biblioteca.service;
 import edu.rachel.biblioteca.dto.AutorRequestDTO;
 import edu.rachel.biblioteca.dto.AutorResponseDTO;
 import edu.rachel.biblioteca.exception.BusinessException;
+import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.AutorMapper;
 import edu.rachel.biblioteca.mock.AutorMock;
 import edu.rachel.biblioteca.model.Autor;
@@ -17,6 +18,7 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,6 +69,30 @@ class AutorServiceImplTest {
                 service.criarAutor(request);
             });
             verify(repository, never()).save(any(Autor.class));
+        }
+    }
+
+    @Nested
+    class BuscarAutorTests{
+        @Test
+        void deveBuscarAutorComSucesso() {
+            Autor autor = AutorMock.getAutorMock(UUID.randomUUID());
+            when(repository.findById(autor.getId())).thenReturn(Optional.of(autor));
+
+            AutorResponseDTO response = service.buscarAutor(autor.getId());
+
+            assertEquals(response.id(), autor.getId());
+        }
+
+        @Test
+        void deveLancarNotFoundExceptionQuandoAutorNaoExistir(){
+            UUID idInvalid = UUID.randomUUID();
+
+            when(repository.findById(idInvalid)).thenReturn(Optional.empty());
+
+            assertThrows(NotFoundException.class, () -> {
+                service.buscarAutor(idInvalid);
+            });
         }
     }
 }
