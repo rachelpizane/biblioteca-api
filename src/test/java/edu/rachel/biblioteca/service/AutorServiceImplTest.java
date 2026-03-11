@@ -1,0 +1,72 @@
+package edu.rachel.biblioteca.service;
+
+import edu.rachel.biblioteca.dto.AutorRequestDTO;
+import edu.rachel.biblioteca.dto.AutorResponseDTO;
+import edu.rachel.biblioteca.exception.BusinessException;
+import edu.rachel.biblioteca.mapper.AutorMapper;
+import edu.rachel.biblioteca.mock.AutorMock;
+import edu.rachel.biblioteca.model.Autor;
+import edu.rachel.biblioteca.repository.AutorRepository;
+import edu.rachel.biblioteca.service.impl.AutorServiceImpl;
+import edu.rachel.biblioteca.validator.AutorValidator;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AutorServiceImplTest {
+    @Mock
+    AutorRepository repository;
+
+    AutorMapper mapper;
+
+    AutorValidator validator;
+
+    AutorServiceImpl service;
+
+    @BeforeEach
+    void setUp() {
+        mapper =  Mappers.getMapper(AutorMapper.class);
+        validator = new AutorValidator(repository);
+        service = new AutorServiceImpl(validator, mapper, repository);
+    }
+
+    @Nested
+    class CadastrarAutorTests {
+        @Test
+        void deveSalvarAutorCorretamente(){
+            AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
+            Autor autor = AutorMock.getAutorMock(UUID.randomUUID());
+
+            when(repository.save(any(Autor.class))).thenReturn(autor);
+
+            AutorResponseDTO response = service.criarAutor(request);
+
+            assertEquals(autor.getId(), response.id());
+            verify(repository, times(1)).save(any(Autor.class));
+        }
+
+        @Test
+        void deveLancarBusinessExceptionQuandoExistirAutorComCPF(){
+            AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
+
+            when(repository.existsByCpf(request.cpf())).thenReturn(true);
+
+            assertThrows(BusinessException.class, () -> {
+                service.criarAutor(request);
+            });
+            verify(repository, never()).save(any(Autor.class));
+        }
+    }
+}
