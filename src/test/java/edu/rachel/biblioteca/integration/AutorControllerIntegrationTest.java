@@ -17,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -61,6 +63,35 @@ public class AutorControllerIntegrationTest {
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("CPF"));
             verify(repository, times(1)).save(any(Autor.class));
+        }
+    }
+
+    @Nested
+    class BuscarAutorTests{
+        @Test
+        void deveBuscarAutorComSucesso(){
+            Autor autor = repository.save(AutorMock.getAutorMock());
+
+            ResponseEntity<AutorResponseDTO> response = restTemplate.getForEntity(
+                    AUTOR_URL + "/{id}",
+                    AutorResponseDTO.class,
+                    autor.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(response.getBody().id(), autor.getId());
+        }
+
+        @Test
+        void deveRetornarErroQuandoAutorNaoExistir(){
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
+                    AUTOR_URL + "/{id}",
+                    ErrorResponseDTO.class,
+                    UUID.randomUUID()
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado(a)"));
         }
     }
 }

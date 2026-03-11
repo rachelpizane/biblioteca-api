@@ -4,6 +4,7 @@ import edu.rachel.biblioteca.controller.impl.AutorController;
 import edu.rachel.biblioteca.dto.AutorRequestDTO;
 import edu.rachel.biblioteca.dto.AutorResponseDTO;
 import edu.rachel.biblioteca.enums.SexoEnum;
+import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.AutorMock;
 import edu.rachel.biblioteca.service.AutorService;
 import edu.rachel.biblioteca.utils.JsonUtils;
@@ -17,11 +18,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AutorController.class)
@@ -84,6 +87,33 @@ class AutorControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestJson))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class BuscarAutorTests{
+        @Test
+        void deveBuscarAutorComSucesso() throws Exception {
+            AutorResponseDTO response = AutorMock.getAutorResponseDTOMock();
+
+            when(autorService.buscarAutor(response.id())).thenReturn(response);
+
+            mockMvc.perform(get("/autores/{id}", response.id())
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(response)));
+        }
+
+        @Test
+        void deveRetornarNotFoundQuandoAutorNaoExistir() throws Exception {
+            UUID idInvalid = UUID.randomUUID();
+
+            when(autorService.buscarAutor(idInvalid)).thenThrow(new NotFoundException("Autor não encontrado"));
+
+            mockMvc.perform(get("/autores/{id}", idInvalid)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
     }
