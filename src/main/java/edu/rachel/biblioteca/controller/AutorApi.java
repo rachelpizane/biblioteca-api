@@ -9,21 +9,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @Tag(
         name = "Autores",
         description = "Operações para gerenciamento de autores"
 )
-@RequestMapping(
-        value = "/autores",
-        consumes = { MediaType.APPLICATION_JSON_VALUE },
-        produces = { MediaType.APPLICATION_JSON_VALUE }
-)
+@RequestMapping(value = "/autores")
 public interface AutorApi {
 
     @Operation(
@@ -46,4 +41,25 @@ public interface AutorApi {
     )
     @PostMapping
     ResponseEntity<AutorResponseDTO> criarAutor(@Valid @RequestBody(required = true) AutorRequestDTO request);
+
+    @Operation(
+            summary = "Busca um autor",
+            description = "Busca um autor pelo seu id."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Autor buscado com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = AutorResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Autor não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @GetMapping("/{id}")
+    ResponseEntity<AutorResponseDTO> buscarAutor(@PathVariable UUID id);
 }

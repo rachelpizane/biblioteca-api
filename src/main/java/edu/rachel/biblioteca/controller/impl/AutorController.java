@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
@@ -28,5 +29,12 @@ public class AutorController implements AutorApi {
                 .toUri();
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @Override
+    public ResponseEntity<AutorResponseDTO> buscarAutor(UUID id) {
+        AutorResponseDTO response = service.buscarAutor(id);
+
+        return ResponseEntity.ok(response);
     }
 }
