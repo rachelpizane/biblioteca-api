@@ -24,8 +24,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -70,7 +72,7 @@ class LivroServiceImplTest {
             LivroResponseDTO response = service.cadastrarLivro(request);
 
             assertEquals(livro.getId(), response.id());
-            assertEquals(1, response.autores().size());
+            assertThat(response.autores()).hasSize(1);
             assertEquals(autor.getId(), response.autores().getFirst().id());
             verify(livroRepository, times(1)).save(any(Livro.class));
         }
@@ -98,6 +100,32 @@ class LivroServiceImplTest {
                 service.cadastrarLivro(request);
             });
             verify(livroRepository, never()).save(any(Livro.class));
+        }
+    }
+
+    @Nested
+    class BuscarLivroTests {
+        @Test
+        void deveBuscarLivroComSucesso() {
+            Livro livro = LivroMock.getLivroMock(UUID.randomUUID(), UUID.randomUUID());
+
+            when(livroRepository.findById(livro.getId())).thenReturn(Optional.of(livro));
+
+            LivroResponseDTO response = service.buscarLivro(livro.getId());
+
+            assertEquals(response.id(), livro.getId());
+            assertThat(response.autores()).hasSize(1);
+        }
+
+        @Test
+        void deveLancarNotFoundExceptionQuandoLivroNaoExistir(){
+            UUID idInvalid = UUID.randomUUID();
+
+            when(livroRepository.findById(idInvalid)).thenReturn(Optional.empty());
+
+            assertThrows(NotFoundException.class, () -> {
+                service.buscarLivro(idInvalid);
+            });
         }
     }
 }

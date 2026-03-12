@@ -86,4 +86,35 @@ public class LivroControllerIntegrationTest {
             verify(livroRepository, never()).save(any(Livro.class));
         }
     }
+
+    @Nested
+    class BuscarLivroTests{
+        @Test
+        void deveBuscarLivroComSucesso(){
+            Autor autor = autorRepository.save(AutorMock.getAutorMock());
+            Livro livro = livroRepository.save(LivroMock.getLivroMock(autor));
+
+            ResponseEntity<LivroResponseDTO> response = restTemplate.getForEntity(
+                    LIVRO_URL + "/{id}",
+                    LivroResponseDTO.class,
+                    livro.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(response.getBody().id(), livro.getId());
+            assertEquals(response.getBody().autores().getFirst().id(), autor.getId());
+        }
+
+        @Test
+        void deveRetornarErroQuandoLivroNaoExistir(){
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
+                    LIVRO_URL + "/{id}",
+                    ErrorResponseDTO.class,
+                    UUID.randomUUID()
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
+        }
+    }
 }

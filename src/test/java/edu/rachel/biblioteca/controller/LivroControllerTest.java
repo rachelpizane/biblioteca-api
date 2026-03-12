@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -105,6 +106,33 @@ public class LivroControllerTest {
             mockMvc.perform(post(LIVRO_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(request)))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class BuscarLivroTests {
+        @Test
+        void deveBuscarLivroComSucesso() throws Exception {
+            LivroResponseDTO response = LivroMock.getLivroResponseDTOMock(UUID.randomUUID());
+
+            when(livroService.buscarLivro(response.id())).thenReturn(response);
+
+            mockMvc.perform(get(LIVRO_URL + "/{id}", response.id())
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(response)));
+        }
+
+        @Test
+        void deveRetornarNotFoundQuandoLivroNaoExistir() throws Exception {
+            UUID idInvalid = UUID.randomUUID();
+
+            when(livroService.buscarLivro(idInvalid)).thenThrow(new NotFoundException("Livro não encontrado"));
+
+            mockMvc.perform(get(LIVRO_URL + "/{id}", idInvalid)
+                            .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }

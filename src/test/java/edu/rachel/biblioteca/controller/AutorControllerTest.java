@@ -92,14 +92,14 @@ class AutorControllerTest {
     }
 
     @Nested
-    class BuscarAutorTests{
+    class BuscarAutorTests {
         @Test
         void deveBuscarAutorComSucesso() throws Exception {
             AutorResponseDTO response = AutorMock.getAutorResponseDTOMock();
 
             when(autorService.buscarAutor(response.id())).thenReturn(response);
 
-            mockMvc.perform(get("/autores/{id}", response.id())
+            mockMvc.perform(get(AUTOR_URL + "/{id}", response.id())
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().json(JsonUtils.convertToJson(response)));
@@ -111,7 +111,7 @@ class AutorControllerTest {
 
             when(autorService.buscarAutor(idInvalid)).thenThrow(new NotFoundException("Autor não encontrado"));
 
-            mockMvc.perform(get("/autores/{id}", idInvalid)
+            mockMvc.perform(get(AUTOR_URL + "/{id}", idInvalid)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
