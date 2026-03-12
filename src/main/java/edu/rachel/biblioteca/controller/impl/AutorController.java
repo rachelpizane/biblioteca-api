@@ -4,10 +4,10 @@ import edu.rachel.biblioteca.controller.AutorApi;
 import edu.rachel.biblioteca.dto.AutorRequestDTO;
 import edu.rachel.biblioteca.dto.AutorResponseDTO;
 import edu.rachel.biblioteca.service.AutorService;
+import edu.rachel.biblioteca.utils.UriUtils;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.UUID;
@@ -21,12 +21,7 @@ public class AutorController implements AutorApi {
     @Override
     public ResponseEntity<AutorResponseDTO> criarAutor(AutorRequestDTO request) {
         AutorResponseDTO response = service.criarAutor(request);
-
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(response.id())
-                .toUri();
+        URI location = UriUtils.construirLocation(response.id());
 
         return ResponseEntity.created(location).body(response);
     }

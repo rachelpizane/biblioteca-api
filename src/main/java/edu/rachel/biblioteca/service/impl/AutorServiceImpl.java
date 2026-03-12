@@ -33,6 +33,6 @@ public class AutorServiceImpl implements AutorService {
         return repository
                 .findById(id)
                 .map(mapper::paraDto)
-                .orElseThrow(() -> new NotFoundException("Autor"));
+                .orElseThrow(() -> new NotFoundException("Autor não encontrado"));
     }
 }
