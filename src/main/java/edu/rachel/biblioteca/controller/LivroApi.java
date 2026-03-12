@@ -10,6 +10,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 
 @Tag(
         name = "Livros",
@@ -45,4 +47,25 @@ public interface LivroApi {
     )
     @PostMapping
     ResponseEntity<LivroResponseDTO> cadastrarLivro(@Valid @RequestBody(required = true) LivroRequestDTO request);
+
+    @Operation(
+            summary = "Buscar um livro",
+            description = "Busca um livro pelo seu id."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Livro buscado com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = LivroResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Livro não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @GetMapping("/{id}")
+    ResponseEntity<LivroResponseDTO> buscarLivro(@PathVariable UUID id);
 }

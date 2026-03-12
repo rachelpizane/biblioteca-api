@@ -2,6 +2,7 @@ package edu.rachel.biblioteca.service.impl;
 
 import edu.rachel.biblioteca.dto.LivroRequestDTO;
 import edu.rachel.biblioteca.dto.LivroResponseDTO;
+import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.LivroMapper;
 import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.model.Livro;
@@ -13,6 +14,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 
@@ -34,6 +36,14 @@ public class LivroServiceImpl implements LivroService {
         return mapper.paraDto(livroSalvo);
     }
 
+    @Override
+    public LivroResponseDTO buscarLivro(UUID id) {
+        return livroRepository
+                .findById(id)
+                .map(mapper::paraDto)
+                .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
+    }
+
     private Livro criarLivro(LivroRequestDTO request) {
         Livro livro = mapper.paraEntidade(request);
 
@@ -45,5 +55,4 @@ public class LivroServiceImpl implements LivroService {
 
         return livro;
     }
-
 }

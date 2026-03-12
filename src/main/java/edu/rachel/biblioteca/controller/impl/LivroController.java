@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
@@ -23,5 +24,12 @@ public class LivroController implements LivroApi {
         URI location = UriUtils.construirLocation(response.id());
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @Override
+    public ResponseEntity<LivroResponseDTO> buscarLivro(UUID id) {
+        LivroResponseDTO response = service.buscarLivro(id);
+
+        return ResponseEntity.ok(response);
     }
 }
