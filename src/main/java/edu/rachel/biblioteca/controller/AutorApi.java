@@ -22,12 +22,12 @@ import java.util.UUID;
 public interface AutorApi {
 
     @Operation(
-            summary = "Cria um novo autor",
-            description = "Recebe os dados de um autor e retorna o autor criado."
+            summary = "Cadastrar um novo autor",
+            description = "Recebe os dados de um autor e retorna o autor cadastrado."
     )
     @ApiResponse(
             responseCode = "201",
-            description = "Autor criado com sucesso",
+            description = "Autor cadastrado com sucesso",
             content = @Content(
                     schema = @Schema(implementation = AutorResponseDTO.class)
             )
@@ -40,7 +40,7 @@ public interface AutorApi {
             )
     )
     @PostMapping
-    ResponseEntity<AutorResponseDTO> criarAutor(@Valid @RequestBody(required = true) AutorRequestDTO request);
+    ResponseEntity<AutorResponseDTO> cadastrarAutor(@Valid @RequestBody(required = true) AutorRequestDTO request);
 
     @Operation(
             summary = "Busca um autor",

@@ -19,8 +19,8 @@ public class AutorController implements AutorApi {
     AutorService service;
 
     @Override
-    public ResponseEntity<AutorResponseDTO> criarAutor(AutorRequestDTO request) {
-        AutorResponseDTO response = service.criarAutor(request);
+    public ResponseEntity<AutorResponseDTO> cadastrarAutor(AutorRequestDTO request) {
+        AutorResponseDTO response = service.cadastrarAutor(request);
         URI location = UriUtils.construirLocation(response.id());
 
         return ResponseEntity.created(location).body(response);

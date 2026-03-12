@@ -21,7 +21,7 @@ public class AutorServiceImpl implements AutorService {
     AutorRepository repository;
 
     @Override
-    public AutorResponseDTO criarAutor(AutorRequestDTO request) {
+    public AutorResponseDTO cadastrarAutor(AutorRequestDTO request) {
         validator.validar(request);
         Autor autorSalvo = repository.save(mapper.paraEntidade(request));
 

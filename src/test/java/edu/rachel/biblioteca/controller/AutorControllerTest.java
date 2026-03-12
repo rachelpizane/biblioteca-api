@@ -40,11 +40,11 @@ class AutorControllerTest {
     @Nested
     class CadastrarAutorTests {
         @Test
-        void deveCriarAutorCorretamente() throws Exception {
+        void deveCadastrarAutorCorretamente() throws Exception {
             AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
             AutorResponseDTO response = AutorMock.getAutorResponseDTOMock();
 
-            when(autorService.criarAutor(request)).thenReturn(response);
+            when(autorService.cadastrarAutor(request)).thenReturn(response);
 
             mockMvc.perform(post(AUTOR_URL)
                             .contentType(MediaType.APPLICATION_JSON)

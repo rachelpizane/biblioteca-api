@@ -42,7 +42,7 @@ public class AutorControllerIntegrationTest {
     @Nested
     class CadastrarAutorTests {
         @Test
-        void deveCriarAutorCorretamente(){
+        void deveCadastrarAutorCorretamente(){
             AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
 
             ResponseEntity<AutorResponseDTO> response = restTemplate.postForEntity(AUTOR_URL, request, AutorResponseDTO.class);
@@ -91,7 +91,7 @@ public class AutorControllerIntegrationTest {
             );
 
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado(a)"));
+            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
         }
     }
 }

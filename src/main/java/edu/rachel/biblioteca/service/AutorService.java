@@ -6,6 +6,6 @@ import edu.rachel.biblioteca.dto.AutorResponseDTO;
 import java.util.UUID;
 
 public interface AutorService {
-    AutorResponseDTO criarAutor(AutorRequestDTO request);
+    AutorResponseDTO cadastrarAutor(AutorRequestDTO request);
     AutorResponseDTO buscarAutor(UUID id);
 }
