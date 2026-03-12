@@ -16,7 +16,7 @@ public record LivroResponseDTO(
         @Schema(description = "ISBN do livro", example = "9783161484100")
         String isbn,
 
-        @Schema(description = "Data de publicação do livro", example = "2022-11-21")
+        @Schema(description = "Data de publicação do livro (YYYY-MM-DD)", example = "2022-11-21")
         LocalDate dataPublicacao,
 
         @Schema(

@@ -22,7 +22,7 @@ public interface LivroApi {
 
     @Operation(
             summary = "Cadastrar um novo livro",
-            description = "Recebe os dados de um livro e retorna o livro cadastrado."
+            description = "Recebe os dados de um livro e retorna o livro cadastrado"
     )
     @ApiResponse(
             responseCode = "201",
@@ -50,7 +50,7 @@ public interface LivroApi {
 
     @Operation(
             summary = "Buscar um livro",
-            description = "Busca um livro pelo seu id."
+            description = "Busca um livro pelo seu id"
     )
     @ApiResponse(
             responseCode = "200",

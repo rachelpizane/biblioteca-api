@@ -23,7 +23,7 @@ public interface AutorApi {
 
     @Operation(
             summary = "Cadastrar um novo autor",
-            description = "Recebe os dados de um autor e retorna o autor cadastrado."
+            description = "Recebe os dados de um autor e retorna o autor cadastrado"
     )
     @ApiResponse(
             responseCode = "201",
@@ -44,7 +44,7 @@ public interface AutorApi {
 
     @Operation(
             summary = "Busca um autor",
-            description = "Busca um autor pelo seu id."
+            description = "Busca um autor pelo seu id"
     )
     @ApiResponse(
             responseCode = "200",
