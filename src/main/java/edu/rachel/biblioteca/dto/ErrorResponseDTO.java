@@ -6,12 +6,9 @@ import java.util.List;
 
 @Schema(description = "Dados de resposta para erros da API")
 public record ErrorResponseDTO(
-        @Schema(description = "Código de status HTTP", example = "500")
+        @Schema(description = "Código de status HTTP")
         int codigo,
 
-        @Schema(
-                description = "Lista de mensagens que detallha os erros ocorridos",
-                example = "[\"Erro interno no servidor\"]"
-        )
+        @Schema(description = "Lista de mensagens que detallha os erros ocorridos")
         List<String> mensagens) {
 }
