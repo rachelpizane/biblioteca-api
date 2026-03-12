@@ -53,7 +53,7 @@ class AutorServiceImplTest {
 
             when(repository.save(any(Autor.class))).thenReturn(autor);
 
-            AutorResponseDTO response = service.criarAutor(request);
+            AutorResponseDTO response = service.cadastrarAutor(request);
 
             assertEquals(autor.getId(), response.id());
             verify(repository, times(1)).save(any(Autor.class));
@@ -66,7 +66,7 @@ class AutorServiceImplTest {
             when(repository.existsByCpf(request.cpf())).thenReturn(true);
 
             assertThrows(BusinessException.class, () -> {
-                service.criarAutor(request);
+                service.cadastrarAutor(request);
             });
             verify(repository, never()).save(any(Autor.class));
         }

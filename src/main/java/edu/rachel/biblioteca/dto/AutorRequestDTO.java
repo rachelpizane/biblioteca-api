@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
-@Schema(description = "Dados para criação de um autor")
+@Schema(description = "Dados para cadastro de um autor")
 public record AutorRequestDTO(
 
         @Schema(description = "CPF do autor", example = "48323788723")
