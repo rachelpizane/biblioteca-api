@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 public class LivroController implements LivroApi {
 
-    LivroService service;
+    private final LivroService service;
 
     @Override
     public ResponseEntity<LivroResponseDTO> cadastrarLivro(LivroRequestDTO request) {

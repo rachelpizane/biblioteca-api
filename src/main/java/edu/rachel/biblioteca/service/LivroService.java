@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface LivroService {
     LivroResponseDTO cadastrarLivro(LivroRequestDTO request);
+
     LivroResponseDTO buscarLivro(UUID id);
 }

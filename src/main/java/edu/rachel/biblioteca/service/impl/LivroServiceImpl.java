@@ -21,10 +21,10 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class LivroServiceImpl implements LivroService {
-    LivroValidator validator;
-    LivroMapper mapper;
-    AutorRepository autorRepository;
-    LivroRepository livroRepository;
+    private final LivroValidator validator;
+    private final LivroMapper mapper;
+    private final AutorRepository autorRepository;
+    private final LivroRepository livroRepository;
 
     @Override
     public LivroResponseDTO cadastrarLivro(LivroRequestDTO request) {

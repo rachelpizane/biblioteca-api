@@ -16,9 +16,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 public class AutorServiceImpl implements AutorService {
-    AutorValidator validator;
-    AutorMapper mapper;
-    AutorRepository repository;
+    private final AutorValidator validator;
+    private final AutorMapper mapper;
+    private final AutorRepository repository;
 
     @Override
     public AutorResponseDTO cadastrarAutor(AutorRequestDTO request) {

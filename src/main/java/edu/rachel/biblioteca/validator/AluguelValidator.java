@@ -16,8 +16,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Component
 public class AluguelValidator {
-    LocatarioRepository locatarioRepository;
-    LivroRepository livroRepository;
+    private final LocatarioRepository locatarioRepository;
+    private final LivroRepository livroRepository;
 
     public void validar(AluguelRequestDTO request) {
         validarExistenciaLocatario(request.locatarioId());

@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 public class AutorController implements AutorApi {
 
-    AutorService service;
+    private final AutorService service;
 
     @Override
     public ResponseEntity<AutorResponseDTO> cadastrarAutor(AutorRequestDTO request) {

@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface AutorService {
     AutorResponseDTO cadastrarAutor(AutorRequestDTO request);
+
     AutorResponseDTO buscarAutor(UUID id);
 }

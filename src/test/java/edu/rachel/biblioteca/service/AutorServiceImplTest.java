@@ -29,13 +29,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AutorServiceImplTest {
     @Mock
-    AutorRepository repository;
+    private AutorRepository repository;
 
-    AutorMapper mapper;
+    private AutorMapper mapper;
 
-    AutorValidator validator;
+    private AutorValidator validator;
 
-    AutorServiceImpl service;
+    private AutorServiceImpl service;
 
     @BeforeEach
     void setUp() {

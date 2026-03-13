@@ -30,13 +30,13 @@ import static org.mockito.Mockito.never;
 @ExtendWith(MockitoExtension.class)
 class LocatarioServiceImplTest {
     @Mock
-    LocatarioRepository repository;
+    private LocatarioRepository repository;
 
-    LocatarioMapper mapper;
+    private LocatarioMapper mapper;
 
-    LocatarioValidator validator;
+    private LocatarioValidator validator;
 
-    LocatarioServiceImpl service;
+    private LocatarioServiceImpl service;
 
     @BeforeEach
     void setUp() {
