@@ -1,10 +1,7 @@
 package edu.rachel.biblioteca.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -39,4 +36,8 @@ public class Livro {
             inverseJoinColumns = @JoinColumn(name = "id_autor")
     )
     private Set<Autor> autores = new HashSet<>();
+
+    @Setter(value = AccessLevel.NONE)
+    @ManyToMany(mappedBy = "livros")
+    private Set<Aluguel> alugueis = new HashSet<>();
 }

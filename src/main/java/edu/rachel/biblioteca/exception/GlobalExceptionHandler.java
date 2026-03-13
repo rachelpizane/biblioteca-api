@@ -12,6 +12,18 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(LivroAlugadoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleLivroAlugadoException(
+            LivroAlugadoException ex) {
+
+        ErrorResponseDTO response = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                List.of(ex.getMessage())
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponseDTO> handleNotFoundException(
             NotFoundException ex) {
