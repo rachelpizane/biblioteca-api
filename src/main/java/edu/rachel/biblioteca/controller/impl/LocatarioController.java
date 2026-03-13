@@ -16,7 +16,7 @@ import java.util.UUID;
 @RestController
 public class LocatarioController implements LocatarioApi {
 
-    LocatarioService service;
+    private final LocatarioService service;
 
     @Override
     public ResponseEntity<LocatarioResponseDTO> cadastrarLocatario(LocatarioRequestDTO request) {

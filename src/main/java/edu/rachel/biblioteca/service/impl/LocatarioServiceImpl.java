@@ -16,9 +16,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 public class LocatarioServiceImpl implements LocatarioService {
-    LocatarioValidator validator;
-    LocatarioMapper mapper;
-    LocatarioRepository repository;
+    private final LocatarioValidator validator;
+    private final LocatarioMapper mapper;
+    private final LocatarioRepository repository;
 
     @Override
     public LocatarioResponseDTO cadastrarLocatario(LocatarioRequestDTO request) {

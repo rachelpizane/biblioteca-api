@@ -35,18 +35,18 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class LivroServiceImplTest {
     @Mock
-    AutorRepository autorRepository;
+    private AutorRepository autorRepository;
 
     @Mock
-    LivroRepository livroRepository;
+    private LivroRepository livroRepository;
 
-    AutorMapper autorMapper;
+    private AutorMapper autorMapper;
 
-    LivroMapper livroMapper;
+    private LivroMapper livroMapper;
 
-    LivroValidator validator;
+    private LivroValidator validator;
 
-    LivroServiceImpl service;
+    private LivroServiceImpl service;
 
     @BeforeEach
     void setUp() {
