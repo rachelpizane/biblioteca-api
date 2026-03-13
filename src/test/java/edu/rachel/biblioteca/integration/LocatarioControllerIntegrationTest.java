@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -78,6 +80,35 @@ class LocatarioControllerIntegrationTest {
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("e-mail"));
             verify(repository, times(1)).save(any(Locatario.class));
+        }
+    }
+
+    @Nested
+    class BuscarLocatarioTests {
+        @Test
+        void deveBuscarLocatarioComSucesso(){
+            Locatario locatario = repository.save(LocatarioMock.getLocatarioMock());
+
+            ResponseEntity<LocatarioResponseDTO> response = restTemplate.getForEntity(
+                    LOCATARIO_URL + "/{id}",
+                    LocatarioResponseDTO.class,
+                    locatario.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(response.getBody().id(), locatario.getId());
+        }
+
+        @Test
+        void deveRetornarErroQuandoLocatarioNaoExistir(){
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
+                    LOCATARIO_URL + "/{id}",
+                    ErrorResponseDTO.class,
+                    UUID.randomUUID()
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
         }
     }
 }

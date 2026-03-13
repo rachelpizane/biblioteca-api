@@ -1,8 +1,9 @@
 package edu.rachel.biblioteca.service;
 
-import edu.rachel.biblioteca.dto.LocatarioRequestDTO;
 import edu.rachel.biblioteca.dto.LocatarioResponseDTO;
+import edu.rachel.biblioteca.dto.LocatarioRequestDTO;
 import edu.rachel.biblioteca.exception.BusinessException;
+import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.LocatarioMapper;
 import edu.rachel.biblioteca.mock.LocatarioMock;
 import edu.rachel.biblioteca.model.Locatario;
@@ -17,6 +18,7 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,6 +85,30 @@ class LocatarioServiceImplTest {
             });
 
             verify(repository, never()).save(any(Locatario.class));
+        }
+    }
+
+    @Nested
+    class BuscarLocatarioTests {
+        @Test
+        void deveBuscarLocatarioComSucesso() {
+            Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
+            when(repository.findById(locatario.getId())).thenReturn(Optional.of(locatario));
+
+            LocatarioResponseDTO response = service.buscarLocatario(locatario.getId());
+
+            assertEquals(locatario.getId(), response.id());
+        }
+
+        @Test
+        void deveLancarNotFoundExceptionQuandoLocatarioNaoExistir(){
+            UUID idInvalid = UUID.randomUUID();
+
+            when(repository.findById(idInvalid)).thenReturn(Optional.empty());
+
+            assertThrows(NotFoundException.class, () -> {
+                service.buscarLocatario(idInvalid);
+            });
         }
     }
 }
