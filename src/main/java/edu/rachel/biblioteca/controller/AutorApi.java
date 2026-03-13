@@ -43,7 +43,7 @@ public interface AutorApi {
     ResponseEntity<AutorResponseDTO> cadastrarAutor(@Valid @RequestBody(required = true) AutorRequestDTO request);
 
     @Operation(
-            summary = "Busca um autor",
+            summary = "Buscar um autor",
             description = "Busca um autor pelo seu id"
     )
     @ApiResponse(
