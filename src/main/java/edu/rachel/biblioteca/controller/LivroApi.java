@@ -40,7 +40,7 @@ public interface LivroApi {
     )
     @ApiResponse(
             responseCode = "404",
-            description = "Autores não encontrados",
+            description = "Um ou mais autores não foram encontrados",
             content = @Content(
                     schema = @Schema(implementation = ErrorResponseDTO.class)
             )
