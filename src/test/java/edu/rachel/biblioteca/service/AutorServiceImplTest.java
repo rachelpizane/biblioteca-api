@@ -81,7 +81,7 @@ class AutorServiceImplTest {
 
             AutorResponseDTO response = service.buscarAutor(autor.getId());
 
-            assertEquals(response.id(), autor.getId());
+            assertEquals(autor.getId(), response.id());
         }
 
         @Test
