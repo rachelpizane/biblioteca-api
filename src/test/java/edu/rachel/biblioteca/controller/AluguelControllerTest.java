@@ -3,6 +3,7 @@ package edu.rachel.biblioteca.controller;
 import edu.rachel.biblioteca.controller.impl.AluguelController;
 import edu.rachel.biblioteca.dto.AluguelRequestDTO;
 import edu.rachel.biblioteca.dto.AluguelResponseDTO;
+import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.AluguelMock;
 import edu.rachel.biblioteca.service.AluguelService;
 import edu.rachel.biblioteca.utils.JsonUtils;
@@ -18,10 +19,12 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -71,6 +74,33 @@ class AluguelControllerTest {
                     AluguelMock.getRequestComLivrosIds(null),
                     AluguelMock.getRequestComLivrosIds(List.of())
             );
+        }
+    }
+
+    @Nested
+    class BuscarAluguelTests {
+        @Test
+        void deveBuscarAluguelComSucesso() throws Exception {
+            AluguelResponseDTO response = AluguelMock.getAluguelResponseDTOMock();
+
+            when(aluguelService.buscarAluguel(response.id())).thenReturn(response);
+
+            mockMvc.perform(get(ALUGUEL_URL + "/{id}", response.id())
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(response)));
+        }
+
+        @Test
+        void deveRetornarNotFoundQuandoAluguelNaoExistir() throws Exception {
+            UUID idInvalid = UUID.randomUUID();
+
+            when(aluguelService.buscarAluguel(idInvalid)).thenThrow(new NotFoundException("Aluguel não encontrado"));
+
+            mockMvc.perform(get(ALUGUEL_URL + "/{id}", idInvalid)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
     }
 }

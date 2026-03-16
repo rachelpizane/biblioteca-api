@@ -171,4 +171,29 @@ class AluguelServiceImplTest {
             verify(aluguelRepository, never()).save(any(Aluguel.class));
         }
     }
+
+    @Nested
+    class BuscarAluguelTests {
+        @Test
+        void deveBuscarAluguelComSucesso() {
+            Aluguel aluguel = AluguelMock.getAluguelMock(UUID.randomUUID(), List.of(UUID.randomUUID()));
+
+            when(aluguelRepository.findById(aluguel.getId())).thenReturn(Optional.of(aluguel));
+
+            AluguelResponseDTO response = service.buscarAluguel(aluguel.getId());
+
+            assertEquals(aluguel.getId(), response.id());
+        }
+
+        @Test
+        void deveLancarNotFoundExceptionQuandoLocatarioNaoExistir(){
+            UUID idInvalid = UUID.randomUUID();
+
+            when(aluguelRepository.findById(idInvalid)).thenReturn(Optional.empty());
+
+            assertThrows(NotFoundException.class, () -> {
+                service.buscarAluguel(idInvalid);
+            });
+        }
+    }
 }

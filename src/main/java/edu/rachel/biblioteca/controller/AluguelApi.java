@@ -8,9 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @Tag(
         name = "Aluguéis",
@@ -52,4 +52,25 @@ public interface AluguelApi {
     )
     @PostMapping
     ResponseEntity<AluguelResponseDTO> cadastrarAluguel(@Valid @RequestBody(required = true) AluguelRequestDTO request);
+
+    @Operation(
+            summary = "Buscar um aluguel",
+            description = "Busca um aluguel pelo seu id"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Aluguel buscado com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = AluguelResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Aluguel não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @GetMapping("/{id}")
+    ResponseEntity<AluguelResponseDTO> buscarAluguel(@PathVariable UUID id);
 }

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
@@ -22,5 +23,12 @@ public class AluguelController implements AluguelApi {
         URI location = UriUtils.construirLocation(response.id());
 
         return ResponseEntity.created(location).body(response);
+    }
+
+    @Override
+    public ResponseEntity<AluguelResponseDTO> buscarAluguel(UUID id) {
+        AluguelResponseDTO response = service.buscarAluguel(id);
+
+        return ResponseEntity.ok(response);
     }
 }
