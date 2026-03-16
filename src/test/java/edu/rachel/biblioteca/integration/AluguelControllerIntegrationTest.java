@@ -124,4 +124,36 @@ class AluguelControllerIntegrationTest {
             verify(aluguelRepository, never()).save(any(Aluguel.class));
         }
     }
+
+    @Nested
+    class BuscarAluguelTests{
+        @Test
+        void deveBuscarAluguelComSucesso(){
+            Autor autor = autorRepository.save(AutorMock.getAutorMock());
+            Livro livro = livroRepository.save(LivroMock.getLivroMock(autor));
+            Locatario locatario = locatarioRepository.save(LocatarioMock.getLocatarioMock());
+            Aluguel aluguel = aluguelRepository.save(AluguelMock.getAluguelMock(locatario.getId(), List.of(livro.getId())));
+
+            ResponseEntity<AluguelResponseDTO> response = restTemplate.getForEntity(
+                    ALUGUEL_URL + "/{id}",
+                    AluguelResponseDTO.class,
+                    aluguel.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(response.getBody().id(), aluguel.getId());
+        }
+
+        @Test
+        void deveRetornarErroQuandoAluguelNaoExistir(){
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
+                    ALUGUEL_URL + "/{id}",
+                    ErrorResponseDTO.class,
+                    UUID.randomUUID()
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
+        }
+    }
 }

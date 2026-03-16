@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -38,6 +39,14 @@ public class AluguelServiceImpl implements AluguelService {
         Aluguel aluguelSalvo = aluguelRepository.save(aluguel);
 
         return mapper.paraDto(aluguelSalvo);
+    }
+
+    @Override
+    public AluguelResponseDTO buscarAluguel(UUID id) {
+        return aluguelRepository
+                .findById(id)
+                .map(mapper::paraDto)
+                .orElseThrow(() -> new NotFoundException("Aluguel não encontrado"));
     }
 
     private Aluguel criarAluguel(AluguelRequestDTO request) {
