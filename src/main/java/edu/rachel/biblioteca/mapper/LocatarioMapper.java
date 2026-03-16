@@ -11,4 +11,6 @@ public interface LocatarioMapper {
     Locatario paraEntidade(LocatarioRequestDTO request);
 
     LocatarioResponseDTO paraDto(Locatario locatario);
+
+    LocatarioResumoDTO paraResumoDto(Locatario locatario);
 }

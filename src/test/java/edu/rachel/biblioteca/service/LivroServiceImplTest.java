@@ -90,7 +90,7 @@ class LivroServiceImplTest {
         }
 
         @Test
-        void deveLancarNotFoundExceptionQuandoExistirLivroComIsbn(){
+        void deveLancarNotFoundExceptionQuandoAutoresNaoEncontrados(){
             List<UUID> autoresIds = List.of(UUID.randomUUID());
             LivroRequestDTO request = LivroMock.getLivroRequestDTOMock(autoresIds);
 

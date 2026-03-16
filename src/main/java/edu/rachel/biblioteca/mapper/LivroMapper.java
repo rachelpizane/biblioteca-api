@@ -2,6 +2,7 @@ package edu.rachel.biblioteca.mapper;
 
 import edu.rachel.biblioteca.dto.LivroRequestDTO;
 import edu.rachel.biblioteca.dto.LivroResponseDTO;
+import edu.rachel.biblioteca.dto.LivroResumoDTO;
 import edu.rachel.biblioteca.model.Livro;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,5 +15,7 @@ public interface LivroMapper {
     Livro paraEntidade(LivroRequestDTO request);
 
     LivroResponseDTO paraDto(Livro livro);
+
+    LivroResumoDTO paraResumoDto(Livro livro);
 }
 
