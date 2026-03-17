@@ -73,4 +73,35 @@ public interface AluguelApi {
     )
     @GetMapping("/{id}")
     ResponseEntity<AluguelResponseDTO> buscarAluguel(@PathVariable UUID id);
+
+    @Operation(
+            summary = "Atualizar status de um aluguel",
+            description = "Atualiza o status de um aluguel existente, se elegível"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Status do aluguel atualizado com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = StatusResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Aluguel não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = "O status do aluguel não pode ser alterado porque seu status atual não permite essa operação",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @PatchMapping("/{id}/status")
+    ResponseEntity<StatusResponseDTO> atualizarAluguel(
+            @PathVariable UUID id,
+            @Valid @RequestBody(required = true) StatusRequestDTO request
+    );
 }
