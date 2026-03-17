@@ -12,6 +12,19 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+
+    @ExceptionHandler(StatusInvalidoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleStatusInvalidoException(
+            StatusInvalidoException ex) {
+
+        ErrorResponseDTO response = new ErrorResponseDTO(
+                HttpStatus.CONFLICT.value(),
+                List.of(ex.getMessage())
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(LivroAlugadoException.class)
     public ResponseEntity<ErrorResponseDTO> handleLivroAlugadoException(
             LivroAlugadoException ex) {

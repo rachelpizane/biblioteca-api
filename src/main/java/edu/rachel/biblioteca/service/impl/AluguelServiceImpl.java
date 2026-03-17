@@ -2,6 +2,7 @@ package edu.rachel.biblioteca.service.impl;
 
 import edu.rachel.biblioteca.dto.AluguelRequestDTO;
 import edu.rachel.biblioteca.dto.AluguelResponseDTO;
+import edu.rachel.biblioteca.dto.StatusResponseDTO;
 import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.AluguelMapper;
@@ -43,10 +44,19 @@ public class AluguelServiceImpl implements AluguelService {
 
     @Override
     public AluguelResponseDTO buscarAluguel(UUID id) {
-        return aluguelRepository
-                .findById(id)
-                .map(mapper::paraDto)
-                .orElseThrow(() -> new NotFoundException("Aluguel não encontrado"));
+        return mapper.paraDto(buscarAluguelByID(id));
+    }
+
+    @Override
+    public StatusResponseDTO atualizarStatusAluguel(UUID id, StatusEnum statusNovo){
+        Aluguel aluguel = buscarAluguelByID(id);
+
+        validator.validar(aluguel, statusNovo);
+
+        aluguel.setStatus(statusNovo);
+        Aluguel aluguelAtualizado = aluguelRepository.save(aluguel);
+
+        return mapper.paraStatusResponseDTO(aluguelAtualizado);
     }
 
     private Aluguel criarAluguel(AluguelRequestDTO request) {
@@ -73,5 +83,11 @@ public class AluguelServiceImpl implements AluguelService {
 
         aluguel.setLivros(livros);
         aluguel.setLocatario(locatario);
+    }
+
+    private Aluguel buscarAluguelByID(UUID id) {
+        return aluguelRepository
+                .findById(id)
+                .orElseThrow(() -> new NotFoundException("Aluguel não encontrado"));
     }
 }

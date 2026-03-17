@@ -3,6 +3,8 @@ package edu.rachel.biblioteca.controller.impl;
 import edu.rachel.biblioteca.controller.AluguelApi;
 import edu.rachel.biblioteca.dto.AluguelRequestDTO;
 import edu.rachel.biblioteca.dto.AluguelResponseDTO;
+import edu.rachel.biblioteca.dto.StatusRequestDTO;
+import edu.rachel.biblioteca.dto.StatusResponseDTO;
 import edu.rachel.biblioteca.service.AluguelService;
 import edu.rachel.biblioteca.utils.UriUtils;
 import lombok.AllArgsConstructor;
@@ -28,6 +30,13 @@ public class AluguelController implements AluguelApi {
     @Override
     public ResponseEntity<AluguelResponseDTO> buscarAluguel(UUID id) {
         AluguelResponseDTO response = service.buscarAluguel(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<StatusResponseDTO> atualizarAluguel(UUID id, StatusRequestDTO request) {
+        StatusResponseDTO response = service.atualizarStatusAluguel(id, request.status());
 
         return ResponseEntity.ok(response);
     }
