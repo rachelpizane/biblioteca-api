@@ -3,7 +3,11 @@ package edu.rachel.biblioteca.controller;
 import edu.rachel.biblioteca.controller.impl.AluguelController;
 import edu.rachel.biblioteca.dto.AluguelRequestDTO;
 import edu.rachel.biblioteca.dto.AluguelResponseDTO;
+import edu.rachel.biblioteca.dto.StatusRequestDTO;
+import edu.rachel.biblioteca.dto.StatusResponseDTO;
+import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.exception.NotFoundException;
+import edu.rachel.biblioteca.exception.StatusInvalidoException;
 import edu.rachel.biblioteca.mock.AluguelMock;
 import edu.rachel.biblioteca.service.AluguelService;
 import edu.rachel.biblioteca.utils.JsonUtils;
@@ -24,8 +28,7 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AluguelController.class)
@@ -37,6 +40,8 @@ class AluguelControllerTest {
     private AluguelService aluguelService;
 
     public static final String ALUGUEL_URL = "/alugueis";
+    public static final String ALUGUEL_ID_URL = ALUGUEL_URL + "/{id}";
+    public static final String ALUGUEL_STATUS_URL = ALUGUEL_ID_URL + "/status";
 
     @Nested
     class CadastrarAluguelTests {
@@ -85,7 +90,7 @@ class AluguelControllerTest {
 
             when(aluguelService.buscarAluguel(response.id())).thenReturn(response);
 
-            mockMvc.perform(get(ALUGUEL_URL + "/{id}", response.id())
+            mockMvc.perform(get(ALUGUEL_ID_URL, response.id())
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().json(JsonUtils.convertToJson(response)));
@@ -97,9 +102,65 @@ class AluguelControllerTest {
 
             when(aluguelService.buscarAluguel(idInvalid)).thenThrow(new NotFoundException("Aluguel não encontrado"));
 
-            mockMvc.perform(get(ALUGUEL_URL + "/{id}", idInvalid)
+            mockMvc.perform(get(ALUGUEL_ID_URL, idInvalid)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class AtualizarStatusAluguelTests {
+        @Test
+        void deveAtualizarAluguelCorretamente() throws Exception {
+            UUID idAluguel = UUID.randomUUID();
+            StatusEnum statusNovo = StatusEnum.FINALIZADO;
+
+            StatusRequestDTO request= new StatusRequestDTO(statusNovo);
+            StatusResponseDTO response = new StatusResponseDTO(idAluguel, statusNovo);
+
+            when(aluguelService.atualizarStatusAluguel(idAluguel, request.status())).thenReturn(response);
+
+            mockMvc.perform(
+                    patch(ALUGUEL_STATUS_URL, idAluguel)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(JsonUtils.convertToJson(request)
+                            )
+                    )
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(response)));
+        }
+
+        @Test
+        void deveRetornarBadRequestQuandoRequestInvalido() throws Exception {
+            UUID idAluguel = UUID.randomUUID();
+            StatusRequestDTO request= new StatusRequestDTO(null);
+
+            mockMvc.perform(
+                            patch(ALUGUEL_STATUS_URL, idAluguel)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(JsonUtils.convertToJson(request)
+                                    )
+                    )
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+
+        @Test
+        void deveRetornarConflictQuandoStatusInvalido() throws Exception {
+            UUID idInvalid = UUID.randomUUID();
+            StatusRequestDTO request= new StatusRequestDTO(StatusEnum.FINALIZADO);
+
+            when(aluguelService.atualizarStatusAluguel(idInvalid, request.status()))
+                    .thenThrow(new StatusInvalidoException("Não é possível alterar status"));
+
+            mockMvc.perform(
+                            patch(ALUGUEL_STATUS_URL, idInvalid)
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(JsonUtils.convertToJson(request)
+                                    )
+                    )
+                    .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
     }

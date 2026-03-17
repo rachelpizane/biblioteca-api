@@ -5,6 +5,7 @@ import edu.rachel.biblioteca.dto.AluguelResponseDTO;
 import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.exception.LivroAlugadoException;
 import edu.rachel.biblioteca.exception.NotFoundException;
+import edu.rachel.biblioteca.exception.StatusInvalidoException;
 import edu.rachel.biblioteca.mapper.AluguelMapper;
 import edu.rachel.biblioteca.mapper.LivroMapper;
 import edu.rachel.biblioteca.mapper.LocatarioMapper;
@@ -23,7 +24,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -31,6 +36,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -194,6 +200,51 @@ class AluguelServiceImplTest {
             assertThrows(NotFoundException.class, () -> {
                 service.buscarAluguel(idInvalid);
             });
+        }
+    }
+
+    @Nested
+    class AtualizarAluguelTests {
+        @Test
+        void deveAtualizarAluguelCorretamente() {
+            ArgumentCaptor<Aluguel> aluguelCaptor = ArgumentCaptor.forClass(Aluguel.class);
+
+            StatusEnum statusNovo = StatusEnum.FINALIZADO;
+            Aluguel aluguel = AluguelMock.getAluguelMock(UUID.randomUUID(), List.of(UUID.randomUUID()));
+
+            when(aluguelRepository.findById(aluguel.getId())).thenReturn(Optional.of(aluguel));
+
+            service.atualizarStatusAluguel(aluguel.getId(), statusNovo);
+
+            verify(aluguelRepository, times(1)).save(aluguelCaptor.capture());
+
+            Aluguel aluguelSalvo = aluguelCaptor.getValue();
+            assertEquals(statusNovo, aluguelSalvo.getStatus());
+        }
+
+        @ParameterizedTest
+        @MethodSource("statusInvalidos")
+        void deveLancarStatusInvalidoExceptionQuandoStatusInvalido(StatusEnum statuAtual, StatusEnum statusNovo){
+            Aluguel aluguel = AluguelMock.getAluguelMock(UUID.randomUUID(), List.of(UUID.randomUUID()));
+            aluguel.setStatus(statuAtual);
+
+            when(aluguelRepository.findById(aluguel.getId())).thenReturn(Optional.of(aluguel));
+
+            assertThrows(StatusInvalidoException.class, () -> {
+                service.atualizarStatusAluguel(aluguel.getId(), statusNovo);
+            });
+
+        }
+
+        static Stream<Arguments> statusInvalidos() {
+            return Stream.of(
+                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.FINALIZADO),
+                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.CANCELADO),
+                    Arguments.of(StatusEnum.CANCELADO, StatusEnum.CANCELADO),
+                    Arguments.of(StatusEnum.CANCELADO, StatusEnum.FINALIZADO),
+                    Arguments.of(StatusEnum.CANCELADO, StatusEnum.EM_ANDAMENTO),
+                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.EM_ANDAMENTO)
+            );
         }
     }
 }

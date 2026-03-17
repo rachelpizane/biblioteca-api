@@ -1,8 +1,7 @@
 package edu.rachel.biblioteca.integration;
 
-import edu.rachel.biblioteca.dto.AluguelRequestDTO;
-import edu.rachel.biblioteca.dto.AluguelResponseDTO;
-import edu.rachel.biblioteca.dto.ErrorResponseDTO;
+import edu.rachel.biblioteca.dto.*;
+import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.mock.AluguelMock;
 import edu.rachel.biblioteca.mock.AutorMock;
 import edu.rachel.biblioteca.mock.LivroMock;
@@ -18,9 +17,14 @@ import edu.rachel.biblioteca.repository.LocatarioRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,6 +32,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +57,8 @@ class AluguelControllerIntegrationTest {
     private LivroRepository livroRepository;
 
     public static final String ALUGUEL_URL = "/alugueis";
+    public static final String ALUGUEL_ID_URL = ALUGUEL_URL + "/{id}";
+    public static final String ALUGUEL_STATUS_URL = ALUGUEL_ID_URL + "/status";
 
     @AfterEach
     void tearDown() {
@@ -129,13 +136,10 @@ class AluguelControllerIntegrationTest {
     class BuscarAluguelTests{
         @Test
         void deveBuscarAluguelComSucesso(){
-            Autor autor = autorRepository.save(AutorMock.getAutorMock());
-            Livro livro = livroRepository.save(LivroMock.getLivroMock(autor));
-            Locatario locatario = locatarioRepository.save(LocatarioMock.getLocatarioMock());
-            Aluguel aluguel = aluguelRepository.save(AluguelMock.getAluguelMock(locatario.getId(), List.of(livro.getId())));
+            Aluguel aluguel = criarAluguel();
 
             ResponseEntity<AluguelResponseDTO> response = restTemplate.getForEntity(
-                    ALUGUEL_URL + "/{id}",
+                    ALUGUEL_ID_URL,
                     AluguelResponseDTO.class,
                     aluguel.getId()
             );
@@ -147,7 +151,7 @@ class AluguelControllerIntegrationTest {
         @Test
         void deveRetornarErroQuandoAluguelNaoExistir(){
             ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
-                    ALUGUEL_URL + "/{id}",
+                    ALUGUEL_ID_URL,
                     ErrorResponseDTO.class,
                     UUID.randomUUID()
             );
@@ -155,5 +159,91 @@ class AluguelControllerIntegrationTest {
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
         }
+    }
+
+    @Nested
+    class AtualizarStatusAluguelTests {
+        @Test
+        void deveAtualizarAluguelCorretamente(){
+            StatusEnum statusNovo = StatusEnum.FINALIZADO;
+            Aluguel aluguel = criarAluguel();
+
+            StatusRequestDTO body = new StatusRequestDTO(statusNovo);
+            HttpEntity<StatusRequestDTO> request = new HttpEntity<>(body);
+
+            ResponseEntity<StatusResponseDTO> response = restTemplate.exchange(
+                    ALUGUEL_STATUS_URL,
+                    HttpMethod.PATCH,
+                    request,
+                    StatusResponseDTO.class,
+                    aluguel.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(aluguel.getId(), response.getBody().idAluguel());
+            assertEquals(statusNovo, response.getBody().status());
+            verify(aluguelRepository, times(2)).save(any(Aluguel.class));
+        }
+
+        @Test
+        void deveRetornarErroQuandoAluguelNaoEncontrado(){
+            StatusRequestDTO body = new StatusRequestDTO(StatusEnum.FINALIZADO);
+            HttpEntity<StatusRequestDTO> request = new HttpEntity<>(body);
+
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.exchange(
+                    ALUGUEL_STATUS_URL,
+                    HttpMethod.PATCH,
+                    request,
+                    ErrorResponseDTO.class,
+                    UUID.randomUUID()
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("Aluguel não encontrado"));
+            verify(aluguelRepository, never()).save(any(Aluguel.class));
+        }
+
+        @ParameterizedTest
+        @MethodSource("statusInvalidos")
+        void deveRetornarConflitoParaStatusInvalidos(StatusEnum statusAtual, StatusEnum statusNovo, String mensagemEsperada) {
+            Aluguel aluguel = criarAluguel(statusAtual);
+
+            StatusRequestDTO body = new StatusRequestDTO(statusNovo);
+            HttpEntity<StatusRequestDTO> request = new HttpEntity<>(body);
+
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.exchange(
+                    ALUGUEL_STATUS_URL,
+                    HttpMethod.PATCH,
+                    request,
+                    ErrorResponseDTO.class,
+                    aluguel.getId()
+            );
+
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains(mensagemEsperada));
+            verify(aluguelRepository, times(1)).save(any(Aluguel.class));
+        }
+
+        static Stream<Arguments> statusInvalidos() {
+            return Stream.of(
+                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.CANCELADO, "Não é possível alterar o status"),
+                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.EM_ANDAMENTO, "Não é permitido reabrir um aluguel")
+            );
+        }
+    }
+
+    private Aluguel criarAluguel(){
+        return criarAluguel(StatusEnum.EM_ANDAMENTO);
+    }
+
+    private Aluguel criarAluguel(StatusEnum status){
+        Autor autor = autorRepository.save(AutorMock.getAutorMock());
+        Livro livro = livroRepository.save(LivroMock.getLivroMock(autor));
+        Locatario locatario = locatarioRepository.save(LocatarioMock.getLocatarioMock());
+
+        Aluguel aluguel = AluguelMock.getAluguelMock(locatario.getId(), List.of(livro.getId()));
+        aluguel.setStatus(status);
+
+        return aluguelRepository.save(aluguel);
     }
 }
