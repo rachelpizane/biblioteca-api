@@ -2,6 +2,9 @@ package edu.rachel.biblioteca.service.impl;
 
 import edu.rachel.biblioteca.dto.LivroRequestDTO;
 import edu.rachel.biblioteca.dto.LivroResponseDTO;
+import edu.rachel.biblioteca.dto.LivroResumoDTO;
+import edu.rachel.biblioteca.dto.PageResponseDTO;
+import edu.rachel.biblioteca.enums.StatusLivroEnum;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.LivroMapper;
 import edu.rachel.biblioteca.model.Autor;
@@ -9,10 +12,14 @@ import edu.rachel.biblioteca.model.Livro;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.service.LivroService;
+import edu.rachel.biblioteca.utils.PageUtils;
 import edu.rachel.biblioteca.validator.LivroValidator;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,6 +49,24 @@ public class LivroServiceImpl implements LivroService {
                 .findById(id)
                 .map(mapper::paraDto)
                 .orElseThrow(() -> new NotFoundException("Livro não encontrado"));
+    }
+
+    @Override
+    public PageResponseDTO<LivroResumoDTO> buscarLivros(StatusLivroEnum statusLivro, Pageable pageable) {
+        Page<LivroResumoDTO> livros = filtrarLivros(statusLivro, pageable).map(mapper::paraResumoDto);
+
+        return PageUtils.paraPage(livros);
+    }
+
+    private Page<Livro> filtrarLivros(StatusLivroEnum statusLivro, Pageable pageable) {
+        if (Objects.isNull(statusLivro)) {
+            return livroRepository.findAll(pageable);
+        }
+
+        return switch (statusLivro) {
+            case DISPONIVEL -> livroRepository.buscarLivrosDisponiveis(pageable);
+            case ALUGADO -> livroRepository.buscarLivrosAlugados(pageable);
+        };
     }
 
     private Livro criarLivro(LivroRequestDTO request) {
