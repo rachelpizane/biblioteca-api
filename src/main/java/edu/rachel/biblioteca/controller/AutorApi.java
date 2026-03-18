@@ -1,9 +1,8 @@
 package edu.rachel.biblioteca.controller;
 
-import edu.rachel.biblioteca.dto.AutorRequestDTO;
-import edu.rachel.biblioteca.dto.AutorResponseDTO;
-import edu.rachel.biblioteca.dto.ErrorResponseDTO;
+import edu.rachel.biblioteca.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -62,4 +61,27 @@ public interface AutorApi {
     )
     @GetMapping("/{id}")
     ResponseEntity<AutorResponseDTO> buscarAutor(@PathVariable UUID id);
+
+    @Operation(
+            summary = "Buscar autores",
+            description = "Retorna uma lista paginada de autores com opção de filtro por nome"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Pagina com os autores filtrados com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = PageResponseDTO.class)
+            )
+    )
+    @GetMapping
+    public ResponseEntity<PageResponseDTO<AutorResumoDTO>> buscarAutores(
+            @Parameter(description = "Nome do autor", example = "Carlos")
+            @RequestParam(required = false) String nome,
+
+            @Parameter(description = "Número da página", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Quantidade de autores por página", example = "5")
+            @RequestParam(defaultValue = "5") int size
+    );
 }
