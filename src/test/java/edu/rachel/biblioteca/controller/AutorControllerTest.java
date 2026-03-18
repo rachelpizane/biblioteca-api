@@ -3,21 +3,28 @@ package edu.rachel.biblioteca.controller;
 import edu.rachel.biblioteca.controller.impl.AutorController;
 import edu.rachel.biblioteca.dto.AutorRequestDTO;
 import edu.rachel.biblioteca.dto.AutorResponseDTO;
+import edu.rachel.biblioteca.dto.AutorResumoDTO;
+import edu.rachel.biblioteca.dto.PageResponseDTO;
 import edu.rachel.biblioteca.enums.SexoEnum;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.AutorMock;
+import edu.rachel.biblioteca.mock.PageMock;
 import edu.rachel.biblioteca.service.AutorService;
 import edu.rachel.biblioteca.utils.JsonUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -115,6 +122,34 @@ class AutorControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class BuscarAutoresTests {
+
+        @ParameterizedTest
+        @MethodSource("parametrosProviders")
+        void deveBuscarAutoresComSucesso(String nome, String nomeParam) throws Exception {
+            String url = Objects.isNull(nomeParam) ? AUTOR_URL : AUTOR_URL + nomeParam;
+            List<AutorResumoDTO> autores = List.of(AutorMock.getAutorResumoDTOMock(), AutorMock.getAutorResumoDTOMock());
+
+            Pageable pageable = PageMock.getPageableMock();
+            PageResponseDTO page = PageMock.getPageResponseDTOMock(autores);
+
+            when(autorService.buscarAutores(nome, pageable)).thenReturn(page);
+
+            mockMvc.perform(get(url)
+                    .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(page)));
+        }
+
+        static Stream<Arguments> parametrosProviders() {
+            return Stream.of(
+                    Arguments.of(null, null),
+                    Arguments.of("carlos", "?nome=carlos")
+            );
         }
     }
 }

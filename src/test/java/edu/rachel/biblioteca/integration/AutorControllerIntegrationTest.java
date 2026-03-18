@@ -1,24 +1,27 @@
 package edu.rachel.biblioteca.integration;
 
-import edu.rachel.biblioteca.dto.AutorRequestDTO;
-import edu.rachel.biblioteca.dto.AutorResponseDTO;
-import edu.rachel.biblioteca.dto.ErrorResponseDTO;
+import edu.rachel.biblioteca.dto.*;
 import edu.rachel.biblioteca.mock.AutorMock;
 import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
+import java.util.List;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -93,5 +96,61 @@ public class AutorControllerIntegrationTest {
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
         }
+    }
+
+    @Nested
+    class BuscarAutoresTests {
+        Autor autor1;
+        Autor autor2;
+
+        @BeforeEach
+        void setup() {
+            autor1 = repository.save(AutorMock.getAutorMock());
+            autor2 = criarAutor("Ana Maia", "24624047871");
+        }
+
+        @Test
+        void deveBuscarTodosAutoresComSucesso(){
+            List<UUID> autoresIds = List.of(autor1.getId(), autor2.getId());
+
+            ResponseEntity<PageResponseDTO<AutorResumoDTO>> response = restTemplate.exchange(
+                    AUTOR_URL,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<UUID> idsRetornados = response.getBody().conteudo().stream().map(AutorResumoDTO::id).toList();
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertThat(idsRetornados).hasSize(autoresIds.size());
+            assertTrue(idsRetornados.containsAll(autoresIds));
+        }
+
+        @Test
+        void deveBuscarAutoresQuandoFiltradoPeloNome(){
+            String parametro = "?nome=maia";
+
+            ResponseEntity<PageResponseDTO<AutorResumoDTO>> response = restTemplate.exchange(
+                    AUTOR_URL + parametro,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<UUID> idsRetornados = response.getBody().conteudo().stream().map(AutorResumoDTO::id).toList();
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertThat(idsRetornados).hasSize(1);
+            assertTrue(idsRetornados.contains(autor2.getId()));
+        }
+    }
+
+    public Autor criarAutor(String nome, String cpf) {
+        Autor autor = AutorMock.getAutorMock();
+        autor.setNome(nome);
+        autor.setCpf(cpf);
+
+        return repository.save(autor);
     }
 }

@@ -2,10 +2,13 @@ package edu.rachel.biblioteca.service;
 
 import edu.rachel.biblioteca.dto.AutorRequestDTO;
 import edu.rachel.biblioteca.dto.AutorResponseDTO;
+import edu.rachel.biblioteca.dto.AutorResumoDTO;
+import edu.rachel.biblioteca.dto.PageResponseDTO;
 import edu.rachel.biblioteca.exception.BusinessException;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.AutorMapper;
 import edu.rachel.biblioteca.mock.AutorMock;
+import edu.rachel.biblioteca.mock.PageMock;
 import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.service.impl.AutorServiceImpl;
@@ -14,15 +17,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -93,6 +104,50 @@ class AutorServiceImplTest {
             assertThrows(NotFoundException.class, () -> {
                 service.buscarAutor(idInvalid);
             });
+        }
+    }
+
+    @Nested
+    class BuscarAutoresTests{
+
+        @ParameterizedTest
+        @MethodSource("parametrosProviders")
+        void deveBuscarAutoresComOuSemFiltro(
+                String nomeParam, int qntInvocacaoSemFiltro, int qntInvocacaoComFiltro){
+
+            Pageable pageable = PageMock.getPageableMock();
+            List<Autor> autores = List.of(AutorMock.getAutorMock(UUID.randomUUID()));
+            Page<Autor> page = PageMock.getPageMock(autores);
+
+            Page<Autor> pageMock = Objects.isNull(nomeParam) || nomeParam.isBlank()
+                    ? repository.findAll(pageable)
+                    : repository.findByNomeContainingIgnoreCase(nomeParam, pageable);
+
+            when(pageMock).thenReturn(page);
+
+            PageResponseDTO<AutorResumoDTO> response = service.buscarAutores(nomeParam, pageable);
+
+            List<UUID> idsRetornados = response.conteudo().stream().map(AutorResumoDTO::id).toList();
+            List<UUID> idsEsperados = autores.stream().map(Autor::getId).toList();
+
+            assertThat(idsRetornados).hasSize(autores.size());
+            assertTrue(idsRetornados.containsAll(idsEsperados));
+
+            assertEquals(page.getNumber(), response.pagina());
+            assertEquals(page.getSize(), response.tamanho());
+            assertEquals(page.getTotalElements(), response.totalElementos());
+            assertEquals(page.getTotalPages(), response.totalPaginas());
+
+            verify(repository, times(qntInvocacaoSemFiltro)).findAll(pageable);
+            verify(repository, times(qntInvocacaoComFiltro)).findByNomeContainingIgnoreCase(nomeParam, pageable);
+        }
+
+        static Stream<Arguments> parametrosProviders() {
+            return Stream.of(
+                    Arguments.of(null, 1, 0),
+                    Arguments.of(" ", 1, 0),
+                    Arguments.of("carlos", 0, 1)
+            );
         }
     }
 }
