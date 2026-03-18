@@ -2,6 +2,8 @@ package edu.rachel.biblioteca.repository;
 
 import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.model.Livro;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -31,4 +33,24 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
     List<UUID> findLivrosIdsComAluguelPorStatus(
             @Param("livrosIds") List<UUID> livrosIds, @Param("status") StatusEnum status
     );
+
+    @Query("""
+    SELECT l
+    FROM Livro l
+    JOIN l.alugueis a
+    WHERE a.status = 'EM_ANDAMENTO'
+    """)
+    Page<Livro> buscarLivrosAlugados(Pageable pageable);
+
+    @Query("""
+    SELECT l
+    FROM Livro l
+    WHERE l.id NOT IN (
+        SELECT l.id
+        FROM Livro l
+        JOIN l.alugueis a
+        WHERE a.status = 'EM_ANDAMENTO'
+    )
+    """)
+    Page<Livro> buscarLivrosDisponiveis(Pageable pageable);
 }

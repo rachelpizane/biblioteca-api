@@ -1,7 +1,9 @@
 package edu.rachel.biblioteca.controller;
 
 import edu.rachel.biblioteca.dto.*;
+import edu.rachel.biblioteca.enums.StatusLivroEnum;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -68,4 +70,27 @@ public interface LivroApi {
     )
     @GetMapping("/{id}")
     ResponseEntity<LivroResponseDTO> buscarLivro(@PathVariable UUID id);
+
+    @Operation(
+            summary = "Buscar livros",
+            description = "Retorna uma lista paginada de livros com opção de filtro por status"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Pagina com os livros filtrados com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = PageResponseDTO.class)
+            )
+    )
+    @GetMapping
+    public ResponseEntity<PageResponseDTO<LivroResumoDTO>> buscarLivros(
+            @Parameter(description = "Status do livro", example = "DISPONIVEL")
+            @RequestParam(name = "status", required = false) StatusLivroEnum statusLivro,
+
+            @Parameter(description = "Número da página", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+
+            @Parameter(description = "Quantidade de livros por página", example = "5")
+            @RequestParam(defaultValue = "5") int size
+    );
 }

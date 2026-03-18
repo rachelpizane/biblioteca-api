@@ -1,11 +1,14 @@
 package edu.rachel.biblioteca.controller.impl;
 
 import edu.rachel.biblioteca.controller.LivroApi;
-import edu.rachel.biblioteca.dto.LivroRequestDTO;
-import edu.rachel.biblioteca.dto.LivroResponseDTO;
+import edu.rachel.biblioteca.dto.*;
+import edu.rachel.biblioteca.enums.StatusLivroEnum;
 import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.utils.UriUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,6 +32,19 @@ public class LivroController implements LivroApi {
     @Override
     public ResponseEntity<LivroResponseDTO> buscarLivro(UUID id) {
         LivroResponseDTO response = service.buscarLivro(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<PageResponseDTO<LivroResumoDTO>> buscarLivros(StatusLivroEnum statusLivro, int page, int size) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("nome").ascending()
+        );
+
+        PageResponseDTO<LivroResumoDTO> response = service.buscarLivros(statusLivro, pageable);
 
         return ResponseEntity.ok(response);
     }
