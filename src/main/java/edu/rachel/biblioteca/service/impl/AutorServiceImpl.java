@@ -51,7 +51,7 @@ public class AutorServiceImpl implements AutorService {
     }
 
     private Page<Autor> filtrarAutores(String nome, Pageable pageable) {
-        return Objects.isNull(nome) || nome.trim().isEmpty() ?
+        return Objects.isNull(nome) || nome.isBlank() ?
                 repository.findAll(pageable) :
                 repository.findByNomeContainingIgnoreCase(nome, pageable);
     }

@@ -2,6 +2,7 @@ package edu.rachel.biblioteca.mock;
 
 import edu.rachel.biblioteca.dto.AutorRequestDTO;
 import edu.rachel.biblioteca.dto.AutorResponseDTO;
+import edu.rachel.biblioteca.dto.AutorResumoDTO;
 import edu.rachel.biblioteca.enums.SexoEnum;
 import edu.rachel.biblioteca.model.Autor;
 
@@ -45,5 +46,11 @@ public class AutorMock {
                 SexoEnum.MASCULINO,
                 1986
         );
+    }
+
+    public static AutorResumoDTO getAutorResumoDTOMock(){
+        Autor autor = getAutorMock(UUID.randomUUID());
+
+        return new AutorResumoDTO(autor.getId(), autor.getNome());
     }
 }
