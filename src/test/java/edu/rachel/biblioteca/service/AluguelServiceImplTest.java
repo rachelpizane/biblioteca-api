@@ -93,7 +93,7 @@ class AluguelServiceImplTest {
 
             when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
             when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(livrosId);
-            when(livroRepository.findLivrosIdsComAluguelEmAndamento(
+            when(livroRepository.findLivrosIdsComAluguelPorStatus(
                     livrosId, StatusEnum.EM_ANDAMENTO)).thenReturn(List.of());
 
             when(locatarioRepository.findById(locatarioId)).thenReturn(Optional.of(locatario));
@@ -149,7 +149,7 @@ class AluguelServiceImplTest {
 
             when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
             when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(livrosId);
-            when(livroRepository.findLivrosIdsComAluguelEmAndamento(
+            when(livroRepository.findLivrosIdsComAluguelPorStatus(
                     livrosId, StatusEnum.EM_ANDAMENTO)).thenReturn(livrosId);
 
             assertThrows(LivroAlugadoException.class, () -> {
@@ -166,7 +166,7 @@ class AluguelServiceImplTest {
 
             when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
             when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(livrosId);
-            when(livroRepository.findLivrosIdsComAluguelEmAndamento(
+            when(livroRepository.findLivrosIdsComAluguelPorStatus(
                     livrosId, StatusEnum.EM_ANDAMENTO)).thenReturn(List.of());
 
             when(locatarioRepository.findById(locatarioId)).thenReturn(Optional.empty());

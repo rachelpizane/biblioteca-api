@@ -52,7 +52,7 @@ public class AluguelValidator {
 
     private void validarLivrosComAluguelEmAndamento(List<UUID> livrosIds) {
         List<UUID> livrosIdsAlugados = livroRepository
-                .findLivrosIdsComAluguelEmAndamento(livrosIds, StatusEnum.EM_ANDAMENTO);
+                .findLivrosIdsComAluguelPorStatus(livrosIds, StatusEnum.EM_ANDAMENTO);
 
         if (!livrosIdsAlugados.isEmpty()) {
             throw new LivroAlugadoException("Livros com aluguel em andamento: " + livrosIdsAlugados);

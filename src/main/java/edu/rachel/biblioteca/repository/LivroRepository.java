@@ -28,7 +28,7 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
     WHERE l.id IN :livrosIds
       AND a.status = :status
     """)
-    List<UUID> findLivrosIdsComAluguelEmAndamento(
+    List<UUID> findLivrosIdsComAluguelPorStatus(
             @Param("livrosIds") List<UUID> livrosIds, @Param("status") StatusEnum status
     );
 }
