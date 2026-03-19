@@ -1,15 +1,14 @@
 package edu.rachel.biblioteca.controller;
 
 import edu.rachel.biblioteca.controller.impl.AutorController;
-import edu.rachel.biblioteca.dto.AutorRequestDTO;
-import edu.rachel.biblioteca.dto.AutorResponseDTO;
-import edu.rachel.biblioteca.dto.AutorResumoDTO;
-import edu.rachel.biblioteca.dto.PageResponseDTO;
+import edu.rachel.biblioteca.dto.*;
 import edu.rachel.biblioteca.enums.SexoEnum;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.AutorMock;
+import edu.rachel.biblioteca.mock.LivroMock;
 import edu.rachel.biblioteca.mock.PageMock;
 import edu.rachel.biblioteca.service.AutorService;
+import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.utils.JsonUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -41,7 +40,12 @@ class AutorControllerTest {
     @MockitoBean
     private AutorService autorService;
 
+    @MockitoBean
+    private LivroService livroService;
+
     public static final String AUTOR_URL = "/autores";
+    public static final String AUTOR_ID_URL = AUTOR_URL  + "/{id}";
+    public static final String AUTOR_LIVROS_URL = AUTOR_ID_URL + "/livros";
 
     @Nested
     class CadastrarAutorTests {
@@ -105,7 +109,7 @@ class AutorControllerTest {
 
             when(autorService.buscarAutor(response.id())).thenReturn(response);
 
-            mockMvc.perform(get(AUTOR_URL + "/{id}", response.id())
+            mockMvc.perform(get(AUTOR_ID_URL, response.id())
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().json(JsonUtils.convertToJson(response)));
@@ -117,7 +121,7 @@ class AutorControllerTest {
 
             when(autorService.buscarAutor(idInvalid)).thenThrow(new NotFoundException("Autor não encontrado"));
 
-            mockMvc.perform(get(AUTOR_URL + "/{id}", idInvalid)
+            mockMvc.perform(get(AUTOR_ID_URL, idInvalid)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
@@ -149,6 +153,35 @@ class AutorControllerTest {
                     null,
                     "carlos"
             );
+        }
+    }
+
+    @Nested
+    class BuscarLivrosAutorTests {
+        @Test
+        void deveBuscarLivrosAutorComSucesso() throws Exception {
+            UUID autorId = UUID.randomUUID();
+            List<LivroResumoDTO> livros = List.of(LivroMock.getLivroResumoDTOMock());
+
+            when(livroService.buscarLivrosPorAutor(autorId)).thenReturn(livros);
+
+            mockMvc.perform(get(AUTOR_LIVROS_URL, autorId)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(livros)));
+        }
+
+        @Test
+        void deveRetornarNotFoundQuandoAutorNaoExistir() throws Exception {
+            UUID idInvalid = UUID.randomUUID();
+
+            when(livroService.buscarLivrosPorAutor(idInvalid))
+                    .thenThrow(new NotFoundException("Autor não encontrado"));
+
+            mockMvc.perform(get(AUTOR_LIVROS_URL, idInvalid)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
     }
 }

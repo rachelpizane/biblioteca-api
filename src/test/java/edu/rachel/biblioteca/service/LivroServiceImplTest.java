@@ -14,6 +14,7 @@ import edu.rachel.biblioteca.model.Livro;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.service.impl.LivroServiceImpl;
+import edu.rachel.biblioteca.validator.AutorValidator;
 import edu.rachel.biblioteca.validator.LivroValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -51,7 +52,9 @@ class LivroServiceImplTest {
 
     private LivroMapper livroMapper;
 
-    private LivroValidator validator;
+    private LivroValidator livroValidator;
+
+    private AutorValidator autorValidator;
 
     private LivroServiceImpl service;
 
@@ -61,8 +64,10 @@ class LivroServiceImplTest {
         livroMapper = Mappers.getMapper(LivroMapper.class);
         ReflectionTestUtils.setField(livroMapper, "autorMapper", autorMapper);
 
-        validator = new LivroValidator(livroRepository, autorRepository);
-        service = new LivroServiceImpl(validator, livroMapper, autorRepository, livroRepository);
+        livroValidator = new LivroValidator(livroRepository, autorRepository);
+        autorValidator = new AutorValidator(autorRepository);
+
+        service = new LivroServiceImpl(autorValidator, livroValidator, livroMapper, autorRepository, livroRepository);
     }
 
     @Nested
@@ -202,6 +207,34 @@ class LivroServiceImplTest {
                     Arguments.of(StatusLivroEnum.DISPONIVEL, 1, 0),
                     Arguments.of(StatusLivroEnum.ALUGADO, 0, 1)
             );
+        }
+    }
+
+    @Nested
+    class BuscarLivrosAutorTests {
+        @Test
+        void deveBuscarLivrosPorAutorCorretamente(){
+            UUID autorId = UUID.randomUUID();
+            Livro livro = LivroMock.getLivroMock(UUID.randomUUID(), autorId);
+
+            when(autorRepository.existsById(autorId)).thenReturn(true);
+            when(livroRepository.findLivrosPorAutorId(autorId)).thenReturn(List.of(livro));
+
+            List<LivroResumoDTO> livros = service.buscarLivrosPorAutor(autorId);
+
+            assertThat(livros).hasSize(1);
+            assertEquals(livros.getFirst().id(), livro.getId());
+        }
+
+        @Test
+        void deveLançarNotFoundExceptionQuandoAutorNaoEncontrado(){
+            UUID idInvalid = UUID.randomUUID();
+
+            when(autorRepository.existsById(idInvalid)).thenReturn(false);
+
+            assertThrows(NotFoundException.class, () -> {
+                service.buscarLivrosPorAutor(idInvalid);
+            });
         }
     }
 }
