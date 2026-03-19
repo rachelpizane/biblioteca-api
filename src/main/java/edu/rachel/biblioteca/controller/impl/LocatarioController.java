@@ -1,8 +1,10 @@
 package edu.rachel.biblioteca.controller.impl;
 
 import edu.rachel.biblioteca.controller.LocatarioApi;
+import edu.rachel.biblioteca.dto.LivroResumoDTO;
 import edu.rachel.biblioteca.dto.LocatarioResponseDTO;
 import edu.rachel.biblioteca.dto.LocatarioRequestDTO;
+import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.service.LocatarioService;
 import edu.rachel.biblioteca.utils.UriUtils;
 import lombok.AllArgsConstructor;
@@ -10,17 +12,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
 @RestController
 public class LocatarioController implements LocatarioApi {
 
-    private final LocatarioService service;
+    private final LocatarioService locatarioService;
+    private final LivroService livroService;
 
     @Override
     public ResponseEntity<LocatarioResponseDTO> cadastrarLocatario(LocatarioRequestDTO request) {
-        LocatarioResponseDTO response = service.cadastrarLocatario(request);
+        LocatarioResponseDTO response = locatarioService.cadastrarLocatario(request);
         URI location = UriUtils.construirLocation(response.id());
 
         return ResponseEntity.created(location).body(response);
@@ -28,7 +32,14 @@ public class LocatarioController implements LocatarioApi {
 
     @Override
     public ResponseEntity<LocatarioResponseDTO> buscarLocatario(UUID id) {
-        LocatarioResponseDTO response = service.buscarLocatario(id);
+        LocatarioResponseDTO response = locatarioService.buscarLocatario(id);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<List<LivroResumoDTO>> buscarLivrosPorLocatario(UUID id) {
+        List<LivroResumoDTO> response = livroService.buscarLivrosPorLocatario(id);
 
         return ResponseEntity.ok(response);
     }

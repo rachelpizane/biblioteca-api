@@ -61,4 +61,13 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
     WHERE a.id = :autorId
     """)
     List<Livro> findLivrosPorAutorId(UUID autorId);
+
+    @Query("""
+    SELECT DISTINCT l
+    FROM Aluguel a
+    JOIN a.livros l
+    WHERE a.locatario.id = :locatarioId
+    AND a.status <> 'CANCELADO'
+    """)
+    List<Livro> findLivrosAlugadosPorLocatarioId(UUID locatarioId);
 }

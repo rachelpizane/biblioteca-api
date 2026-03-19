@@ -2,9 +2,12 @@ package edu.rachel.biblioteca.validator;
 
 import edu.rachel.biblioteca.dto.LocatarioRequestDTO;
 import edu.rachel.biblioteca.exception.BusinessException;
+import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 @AllArgsConstructor
 @Component
@@ -14,6 +17,12 @@ public class LocatarioValidator {
     public void validar(LocatarioRequestDTO request) {
         validarCpfUnico(request.cpf());
         validarEmailUnico(request.email());
+    }
+
+    public void validarExistencia(UUID id) {
+        if(!repository.existsById(id)) {
+            throw new NotFoundException("Locatário não encontrado");
+        }
     }
 
     private void validarCpfUnico(String cpf){

@@ -18,4 +18,6 @@ public interface LivroService {
     PageResponseDTO<LivroResumoDTO> buscarLivros(StatusLivroEnum statusLivro, Pageable pageable);
 
     List<LivroResumoDTO> buscarLivrosPorAutor(UUID autorId);
+
+    List<LivroResumoDTO> buscarLivrosPorLocatario(UUID autorId);
 }
