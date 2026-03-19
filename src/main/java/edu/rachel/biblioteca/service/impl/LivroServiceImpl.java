@@ -15,6 +15,7 @@ import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.utils.PageUtils;
 import edu.rachel.biblioteca.validator.AutorValidator;
 import edu.rachel.biblioteca.validator.LivroValidator;
+import edu.rachel.biblioteca.validator.LocatarioValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class LivroServiceImpl implements LivroService {
+
+    private final LocatarioValidator locatarioValidator;
     private final AutorValidator autorValidator;
     private final LivroValidator livroValidator;
     private final LivroMapper mapper;
@@ -65,6 +68,14 @@ public class LivroServiceImpl implements LivroService {
     public List<LivroResumoDTO> buscarLivrosPorAutor(UUID autorId) {
         autorValidator.validarExistencia(autorId);
         List<Livro> livros = livroRepository.findLivrosPorAutorId(autorId);
+
+        return mapper.toLivroResumoDTOList(livros);
+    }
+
+    @Override
+    public List<LivroResumoDTO> buscarLivrosPorLocatario(UUID locatarioId) {
+        locatarioValidator.validarExistencia(locatarioId);
+        List<Livro> livros = livroRepository.findLivrosAlugadosPorLocatarioId(locatarioId);
 
         return mapper.toLivroResumoDTOList(livros);
     }
