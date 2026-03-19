@@ -1,26 +1,35 @@
 package edu.rachel.biblioteca.integration;
 
 import edu.rachel.biblioteca.dto.*;
-import edu.rachel.biblioteca.mock.AutorMock;
-import edu.rachel.biblioteca.mock.LivroMock;
+import edu.rachel.biblioteca.enums.StatusLivroEnum;
+import edu.rachel.biblioteca.mock.*;
+import edu.rachel.biblioteca.model.Aluguel;
 import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.model.Livro;
+import edu.rachel.biblioteca.model.Locatario;
+import edu.rachel.biblioteca.repository.AluguelRepository;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
+import edu.rachel.biblioteca.repository.LocatarioRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -37,10 +46,18 @@ public class LivroControllerIntegrationTest {
     @MockitoSpyBean
     private AutorRepository autorRepository;
 
+    @MockitoSpyBean
+    private LocatarioRepository locatarioRepository;
+
+    @MockitoSpyBean
+    private AluguelRepository aluguelRepository;
+
     public static final String LIVRO_URL = "/livros";
 
     @AfterEach
     void tearDown() {
+        aluguelRepository.deleteAll();
+        locatarioRepository.deleteAll();
         livroRepository.deleteAll();
         autorRepository.deleteAll();
     }
@@ -116,5 +133,81 @@ public class LivroControllerIntegrationTest {
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
         }
+    }
+
+    @Nested
+    class BuscarLivrosTests {
+        Livro livro1;
+        Livro livro2;
+
+        @BeforeEach
+        void setup() {
+            Autor autor = autorRepository.save(AutorMock.getAutorMock());
+
+            livro1 = criarLivro(autor, "2468135792468");
+            livro2 = criarLivro(autor, "1357924681357");
+        }
+
+        @Test
+        void deveBuscarTodosLivrosComSucesso() {
+            List<UUID> livrosIds = List.of(livro1.getId(), livro2.getId());
+
+            ResponseEntity<PageResponseDTO<LivroResumoDTO>> response = restTemplate.exchange(
+                    LIVRO_URL,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<UUID> idsRetornados = response.getBody().conteudo().stream().map(LivroResumoDTO::id).toList();
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertThat(idsRetornados).hasSize(livrosIds.size());
+            assertTrue(idsRetornados.containsAll(livrosIds));
+
+            verify(livroRepository, times(1)).findAll(PageMock.getPageableMock());
+            verify(livroRepository, never()).findLivrosAlugados(PageMock.getPageableMock());
+            verify(livroRepository, never()).findLivrosDisponiveis(PageMock.getPageableMock());
+        }
+
+        @Test
+        void deveBuscarLivrosQuandoFiltradoPorStatus() {
+            criarAluguel(livro1);
+
+            String statusParam = "?status=" + StatusLivroEnum.ALUGADO;
+            List<UUID> livrosIds = List.of(livro1.getId());
+
+            ResponseEntity<PageResponseDTO<LivroResumoDTO>> response = restTemplate.exchange(
+                    LIVRO_URL + statusParam,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<UUID> idsRetornados = response.getBody().conteudo().stream().map(LivroResumoDTO::id).toList();
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertThat(idsRetornados).hasSize(livrosIds.size());
+            assertTrue(idsRetornados.containsAll(livrosIds));
+
+            verify(livroRepository, never()).findAll(PageMock.getPageableMock());
+            verify(livroRepository, times(1)).findLivrosAlugados(PageMock.getPageableMock());
+            verify(livroRepository, never()).findLivrosDisponiveis(PageMock.getPageableMock());
+        }
+    }
+
+    private void criarAluguel(Livro livro){
+        Locatario locatario = locatarioRepository.save(LocatarioMock.getLocatarioMock());
+        Aluguel aluguel = AluguelMock.getAluguelMock(locatario.getId(), List.of(livro.getId()));
+
+        aluguelRepository.save(aluguel);
+    }
+
+    private Livro criarLivro(Autor autor,String isbn) {
+        Livro livro = livroRepository.save(LivroMock.getLivroMock(autor));
+        if (Objects.nonNull(isbn)) {
+            livro.setIsbn(isbn);
+        }
+        return livroRepository.save(livro);
     }
 }
