@@ -2,8 +2,11 @@ package edu.rachel.biblioteca.integration;
 
 import edu.rachel.biblioteca.dto.*;
 import edu.rachel.biblioteca.mock.AutorMock;
+import edu.rachel.biblioteca.mock.LivroMock;
 import edu.rachel.biblioteca.model.Autor;
+import edu.rachel.biblioteca.model.Livro;
 import edu.rachel.biblioteca.repository.AutorRepository;
+import edu.rachel.biblioteca.repository.LivroRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -19,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,15 +37,20 @@ public class AutorControllerIntegrationTest {
     private TestRestTemplate restTemplate;
 
     @MockitoSpyBean
-    private AutorRepository repository;
+    private AutorRepository autorRepository;
+    
+    @MockitoSpyBean
+    private LivroRepository livroRepository;
 
     public static final String AUTOR_URL = "/autores";
+    public static final String AUTOR_ID_URL = AUTOR_URL  + "/{id}";
+    public static final String AUTOR_LIVROS_URL = AUTOR_ID_URL + "/livros";
 
     @AfterEach
     void tearDown() {
-        repository.deleteAll();
+        livroRepository.deleteAll();
+        autorRepository.deleteAll();
     }
-
     @Nested
     class CadastrarAutorTests {
         @Test
@@ -52,12 +61,12 @@ public class AutorControllerIntegrationTest {
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody().id());
-            verify(repository, times(1)).save(any(Autor.class));
+            verify(autorRepository, times(1)).save(any(Autor.class));
         }
 
         @Test
         void deveRetornarErroQuandoExistirAutorCPF(){
-            repository.save(AutorMock.getAutorMock());
+            autorRepository.save(AutorMock.getAutorMock());
 
             AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
 
@@ -65,7 +74,7 @@ public class AutorControllerIntegrationTest {
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("CPF"));
-            verify(repository, times(1)).save(any(Autor.class));
+            verify(autorRepository, times(1)).save(any(Autor.class));
         }
     }
 
@@ -73,10 +82,10 @@ public class AutorControllerIntegrationTest {
     class BuscarAutorTests{
         @Test
         void deveBuscarAutorComSucesso(){
-            Autor autor = repository.save(AutorMock.getAutorMock());
+            Autor autor = criarAutor();
 
             ResponseEntity<AutorResponseDTO> response = restTemplate.getForEntity(
-                    AUTOR_URL + "/{id}",
+                    AUTOR_ID_URL,
                     AutorResponseDTO.class,
                     autor.getId()
             );
@@ -88,7 +97,7 @@ public class AutorControllerIntegrationTest {
         @Test
         void deveRetornarErroQuandoAutorNaoExistir(){
             ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
-                    AUTOR_URL + "/{id}",
+                    AUTOR_ID_URL,
                     ErrorResponseDTO.class,
                     UUID.randomUUID()
             );
@@ -105,7 +114,7 @@ public class AutorControllerIntegrationTest {
 
         @BeforeEach
         void setup() {
-            autor1 = repository.save(AutorMock.getAutorMock());
+            autor1 = criarAutor();
             autor2 = criarAutor("Ana Maia", "24624047871");
         }
 
@@ -145,12 +154,59 @@ public class AutorControllerIntegrationTest {
             assertTrue(idsRetornados.contains(autor2.getId()));
         }
     }
+    
+    @Nested
+    class BuscarLivrosAutorTests {
+        @Test
+        void deveBuscarLivrosAutorCorretamente(){
+            Autor autor = criarAutor();
+            Livro livro = criarLivro(autor);
 
+            ResponseEntity<List<LivroResumoDTO>> response = restTemplate.exchange(
+                    AUTOR_LIVROS_URL,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {},
+                    autor.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertThat(response.getBody()).hasSize(1);
+            assertEquals(response.getBody().getFirst().id(), livro.getId());
+        }
+
+        @Test
+        void deveRetornarErroQuandoAutorNaoExistir(){
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
+                    AUTOR_LIVROS_URL,
+                    ErrorResponseDTO.class,
+                    UUID.randomUUID()
+            );
+
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
+        }
+    }
+
+    public Autor criarAutor() {
+        return criarAutor(null, null);
+    }
+    
     public Autor criarAutor(String nome, String cpf) {
         Autor autor = AutorMock.getAutorMock();
-        autor.setNome(nome);
-        autor.setCpf(cpf);
 
-        return repository.save(autor);
+        if(Objects.nonNull(nome)) {
+            autor.setNome(nome);
+        }
+
+        if(Objects.nonNull(cpf)) {
+            autor.setCpf(cpf);
+        }
+
+        return autorRepository.save(autor);
+    }
+
+    private Livro criarLivro(Autor autor) {
+        return livroRepository.save(LivroMock.getLivroMock(autor));
     }
 }
