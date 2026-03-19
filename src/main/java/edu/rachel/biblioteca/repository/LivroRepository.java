@@ -53,4 +53,12 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
     )
     """)
     Page<Livro> findLivrosDisponiveis(Pageable pageable);
+
+    @Query("""
+    SELECT l
+    FROM Livro l
+    JOIN l.autores a
+    WHERE a.id = :autorId
+    """)
+    List<Livro> findLivrosPorAutorId(UUID autorId);
 }

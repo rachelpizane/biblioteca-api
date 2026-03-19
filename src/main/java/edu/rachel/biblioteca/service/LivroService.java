@@ -7,6 +7,7 @@ import edu.rachel.biblioteca.dto.PageResponseDTO;
 import edu.rachel.biblioteca.enums.StatusLivroEnum;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface LivroService {
@@ -15,4 +16,6 @@ public interface LivroService {
     LivroResponseDTO buscarLivro(UUID id);
 
     PageResponseDTO<LivroResumoDTO> buscarLivros(StatusLivroEnum statusLivro, Pageable pageable);
+
+    List<LivroResumoDTO> buscarLivrosPorAutor(UUID autorId);
 }
