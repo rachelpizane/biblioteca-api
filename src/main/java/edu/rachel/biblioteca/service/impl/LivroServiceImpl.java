@@ -64,8 +64,8 @@ public class LivroServiceImpl implements LivroService {
         }
 
         return switch (statusLivro) {
-            case DISPONIVEL -> livroRepository.buscarLivrosDisponiveis(pageable);
-            case ALUGADO -> livroRepository.buscarLivrosAlugados(pageable);
+            case DISPONIVEL -> livroRepository.findLivrosDisponiveis(pageable);
+            case ALUGADO -> livroRepository.findLivrosAlugados(pageable);
         };
     }
 

@@ -40,7 +40,7 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
     JOIN l.alugueis a
     WHERE a.status = 'EM_ANDAMENTO'
     """)
-    Page<Livro> buscarLivrosAlugados(Pageable pageable);
+    Page<Livro> findLivrosAlugados(Pageable pageable);
 
     @Query("""
     SELECT l
@@ -52,5 +52,5 @@ public interface LivroRepository extends JpaRepository<Livro, UUID> {
         WHERE a.status = 'EM_ANDAMENTO'
     )
     """)
-    Page<Livro> buscarLivrosDisponiveis(Pageable pageable);
+    Page<Livro> findLivrosDisponiveis(Pageable pageable);
 }

@@ -3,6 +3,7 @@ package edu.rachel.biblioteca.mock;
 import edu.rachel.biblioteca.dto.AutorResumoDTO;
 import edu.rachel.biblioteca.dto.LivroRequestDTO;
 import edu.rachel.biblioteca.dto.LivroResponseDTO;
+import edu.rachel.biblioteca.dto.LivroResumoDTO;
 import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.model.Livro;
 
@@ -56,5 +57,11 @@ public class LivroMock {
                 livro.getDataPublicacao(),
                 autores
         );
+    }
+
+    public static LivroResumoDTO getLivroResumoDTOMock(){
+        Livro livro = getLivroMock(UUID.randomUUID(), UUID.randomUUID());
+
+        return new LivroResumoDTO(livro.getId(), livro.getNome());
     }
 }

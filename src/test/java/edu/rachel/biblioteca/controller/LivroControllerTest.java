@@ -1,10 +1,11 @@
 package edu.rachel.biblioteca.controller;
 
 import edu.rachel.biblioteca.controller.impl.LivroController;
-import edu.rachel.biblioteca.dto.LivroRequestDTO;
-import edu.rachel.biblioteca.dto.LivroResponseDTO;
+import edu.rachel.biblioteca.dto.*;
+import edu.rachel.biblioteca.enums.StatusLivroEnum;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.LivroMock;
+import edu.rachel.biblioteca.mock.PageMock;
 import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.utils.JsonUtils;
 import org.junit.jupiter.api.Nested;
@@ -13,12 +14,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -135,6 +138,33 @@ public class LivroControllerTest {
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class BuscarLivrosTests {
+        @ParameterizedTest
+        @MethodSource("parametrosProvider")
+        void deveBuscarLivrosComOuSemFiltro(StatusLivroEnum statusParam) throws Exception {
+            String url = Objects.isNull(statusParam) ? LIVRO_URL : LIVRO_URL + "?status=" + statusParam;
+            List<LivroResumoDTO> livros = List.of(LivroMock.getLivroResumoDTOMock(), LivroMock.getLivroResumoDTOMock());
+
+            Pageable pageable = PageMock.getPageableMock();
+            PageResponseDTO page = PageMock.getPageResponseDTOMock(livros);
+
+            when(livroService.buscarLivros(statusParam, pageable)).thenReturn(page);
+
+            mockMvc.perform(get(url)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(page)));
+        }
+
+        static Stream<StatusLivroEnum> parametrosProvider() {
+            return Stream.of(
+                    null,
+                    StatusLivroEnum.DISPONIVEL
+            );
         }
     }
 }

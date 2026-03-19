@@ -14,7 +14,6 @@ import edu.rachel.biblioteca.utils.JsonUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -130,14 +129,14 @@ class AutorControllerTest {
 
         @ParameterizedTest
         @MethodSource("parametrosProviders")
-        void deveBuscarAutoresComSucesso(String nome, String nomeParam) throws Exception {
-            String url = Objects.isNull(nomeParam) ? AUTOR_URL : AUTOR_URL + nomeParam;
+        void deveBuscarAutoresComSucesso(String nomeParam) throws Exception {
+            String url = Objects.isNull(nomeParam) ? AUTOR_URL : AUTOR_URL + "?nome=" + nomeParam;
             List<AutorResumoDTO> autores = List.of(AutorMock.getAutorResumoDTOMock(), AutorMock.getAutorResumoDTOMock());
 
             Pageable pageable = PageMock.getPageableMock();
             PageResponseDTO page = PageMock.getPageResponseDTOMock(autores);
 
-            when(autorService.buscarAutores(nome, pageable)).thenReturn(page);
+            when(autorService.buscarAutores(nomeParam, pageable)).thenReturn(page);
 
             mockMvc.perform(get(url)
                     .contentType(MediaType.APPLICATION_JSON))
@@ -145,10 +144,10 @@ class AutorControllerTest {
                     .andExpect(content().json(JsonUtils.convertToJson(page)));
         }
 
-        static Stream<Arguments> parametrosProviders() {
+        static Stream<String> parametrosProviders() {
             return Stream.of(
-                    Arguments.of(null, null),
-                    Arguments.of("carlos", "?nome=carlos")
+                    null,
+                    "carlos"
             );
         }
     }
