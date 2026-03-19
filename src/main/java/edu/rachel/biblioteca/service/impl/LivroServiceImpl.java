@@ -13,12 +13,14 @@ import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.utils.PageUtils;
+import edu.rachel.biblioteca.validator.AutorValidator;
 import edu.rachel.biblioteca.validator.LivroValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -28,14 +30,15 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class LivroServiceImpl implements LivroService {
-    private final LivroValidator validator;
+    private final AutorValidator autorValidator;
+    private final LivroValidator livroValidator;
     private final LivroMapper mapper;
     private final AutorRepository autorRepository;
     private final LivroRepository livroRepository;
 
     @Override
     public LivroResponseDTO cadastrarLivro(LivroRequestDTO request) {
-        validator.validar((request));
+        livroValidator.validar((request));
 
         Livro livro = criarLivro(request);
         Livro livroSalvo = livroRepository.save(livro);
@@ -56,6 +59,14 @@ public class LivroServiceImpl implements LivroService {
         Page<LivroResumoDTO> livros = filtrarLivros(statusLivro, pageable).map(mapper::paraResumoDto);
 
         return PageUtils.paraPage(livros);
+    }
+
+    @Override
+    public List<LivroResumoDTO> buscarLivrosPorAutor(UUID autorId) {
+        autorValidator.validarExistencia(autorId);
+        List<Livro> livros = livroRepository.findLivrosPorAutorId(autorId);
+
+        return mapper.toLivroResumoDTOList(livros);
     }
 
     private Page<Livro> filtrarLivros(StatusLivroEnum statusLivro, Pageable pageable) {

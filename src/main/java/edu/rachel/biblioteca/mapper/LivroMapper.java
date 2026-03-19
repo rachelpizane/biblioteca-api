@@ -7,6 +7,8 @@ import edu.rachel.biblioteca.model.Livro;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring", uses = {AutorMapper.class})
 public interface LivroMapper {
 
@@ -17,5 +19,7 @@ public interface LivroMapper {
     LivroResponseDTO paraDto(Livro livro);
 
     LivroResumoDTO paraResumoDto(Livro livro);
+
+    List<LivroResumoDTO> toLivroResumoDTOList(List<Livro> livros);
 }
 

@@ -3,6 +3,7 @@ package edu.rachel.biblioteca.controller;
 import edu.rachel.biblioteca.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Tag(
@@ -84,4 +86,25 @@ public interface AutorApi {
             @Parameter(description = "Quantidade de autores por página", example = "5")
             @RequestParam(defaultValue = "5") int size
     );
+
+    @Operation(
+            summary = "Buscar livros de um autor",
+            description = "Retorna uma lista de livros de um autor"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Lista de livros retornada com sucesso",
+            content = @Content(
+                    array = @ArraySchema(schema = @Schema(implementation = LivroResumoDTO.class))
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Autor não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @GetMapping("{id}/livros")
+    public ResponseEntity<List<LivroResumoDTO>> buscarLivrosPorAutor(@PathVariable UUID id);
 }
