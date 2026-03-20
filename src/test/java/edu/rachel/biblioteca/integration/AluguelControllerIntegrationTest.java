@@ -14,6 +14,7 @@ import edu.rachel.biblioteca.repository.AluguelRepository;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
+import edu.rachel.biblioteca.utils.Constants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -55,11 +56,7 @@ class AluguelControllerIntegrationTest {
 
     @MockitoSpyBean
     private LivroRepository livroRepository;
-
-    public static final String ALUGUEL_URL = "/alugueis";
-    public static final String ALUGUEL_ID_URL = ALUGUEL_URL + "/{id}";
-    public static final String ALUGUEL_STATUS_URL = ALUGUEL_ID_URL + "/status";
-
+    
     @AfterEach
     void tearDown() {
         aluguelRepository.deleteAll();
@@ -79,7 +76,7 @@ class AluguelControllerIntegrationTest {
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatario.getId(), List.of(livro.getId()));
 
             ResponseEntity<AluguelResponseDTO> response = restTemplate.postForEntity(
-                    ALUGUEL_URL, request, AluguelResponseDTO.class);
+                    Constants.ALUGUEL_URL, request, AluguelResponseDTO.class);
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody().id());
@@ -97,7 +94,7 @@ class AluguelControllerIntegrationTest {
 
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatario.getId(), List.of(livro.getId()));
 
-            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(ALUGUEL_URL, request, ErrorResponseDTO.class);
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(Constants.ALUGUEL_URL, request, ErrorResponseDTO.class);
 
             assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("aluguel em andamento"));
@@ -111,7 +108,7 @@ class AluguelControllerIntegrationTest {
 
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(UUID.randomUUID(), List.of(livro.getId()));
 
-            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(ALUGUEL_URL, request, ErrorResponseDTO.class);
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(Constants.ALUGUEL_URL, request, ErrorResponseDTO.class);
 
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("Locatário não encontrado"));
@@ -124,7 +121,7 @@ class AluguelControllerIntegrationTest {
 
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatario.getId(), List.of(UUID.randomUUID()));
 
-            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(ALUGUEL_URL, request, ErrorResponseDTO.class);
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(Constants.ALUGUEL_URL, request, ErrorResponseDTO.class);
 
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("Livros não encontrados"));
@@ -139,7 +136,7 @@ class AluguelControllerIntegrationTest {
             Aluguel aluguel = criarAluguel();
 
             ResponseEntity<AluguelResponseDTO> response = restTemplate.getForEntity(
-                    ALUGUEL_ID_URL,
+                    Constants.ALUGUEL_ID_URL,
                     AluguelResponseDTO.class,
                     aluguel.getId()
             );
@@ -151,7 +148,7 @@ class AluguelControllerIntegrationTest {
         @Test
         void deveRetornarErroQuandoAluguelNaoExistir(){
             ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
-                    ALUGUEL_ID_URL,
+                    Constants.ALUGUEL_ID_URL,
                     ErrorResponseDTO.class,
                     UUID.randomUUID()
             );
@@ -172,7 +169,7 @@ class AluguelControllerIntegrationTest {
             HttpEntity<StatusRequestDTO> request = new HttpEntity<>(body);
 
             ResponseEntity<StatusResponseDTO> response = restTemplate.exchange(
-                    ALUGUEL_STATUS_URL,
+                    Constants.ALUGUEL_STATUS_URL,
                     HttpMethod.PATCH,
                     request,
                     StatusResponseDTO.class,
@@ -191,7 +188,7 @@ class AluguelControllerIntegrationTest {
             HttpEntity<StatusRequestDTO> request = new HttpEntity<>(body);
 
             ResponseEntity<ErrorResponseDTO> response = restTemplate.exchange(
-                    ALUGUEL_STATUS_URL,
+                    Constants.ALUGUEL_STATUS_URL,
                     HttpMethod.PATCH,
                     request,
                     ErrorResponseDTO.class,
@@ -212,7 +209,7 @@ class AluguelControllerIntegrationTest {
             HttpEntity<StatusRequestDTO> request = new HttpEntity<>(body);
 
             ResponseEntity<ErrorResponseDTO> response = restTemplate.exchange(
-                    ALUGUEL_STATUS_URL,
+                    Constants.ALUGUEL_STATUS_URL,
                     HttpMethod.PATCH,
                     request,
                     ErrorResponseDTO.class,

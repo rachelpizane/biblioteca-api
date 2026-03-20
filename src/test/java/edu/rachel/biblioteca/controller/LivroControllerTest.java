@@ -7,6 +7,7 @@ import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.LivroMock;
 import edu.rachel.biblioteca.mock.PageMock;
 import edu.rachel.biblioteca.service.LivroService;
+import edu.rachel.biblioteca.utils.Constants;
 import edu.rachel.biblioteca.utils.JsonUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -38,9 +39,7 @@ public class LivroControllerTest {
 
     @MockitoBean
     private LivroService livroService;
-
-    public static final String LIVRO_URL = "/livros";
-
+    
     @Nested
     class CadastrarLivroTests {
         @Test
@@ -51,7 +50,7 @@ public class LivroControllerTest {
 
             when(livroService.cadastrarLivro(request)).thenReturn(response);
 
-            mockMvc.perform(post(LIVRO_URL)
+            mockMvc.perform(post(Constants.LIVRO_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(request)))
                     .andExpect(status().isCreated())
@@ -62,7 +61,7 @@ public class LivroControllerTest {
         @MethodSource("requestInvalidos")
         void deveRetornarBadRequestParaDadosInvalidos(LivroRequestDTO requestInvalido) throws Exception {
 
-            mockMvc.perform(post(LIVRO_URL)
+            mockMvc.perform(post(Constants.LIVRO_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(requestInvalido)))
                     .andExpect(status().isBadRequest())
@@ -106,7 +105,7 @@ public class LivroControllerTest {
             when(livroService.cadastrarLivro(request))
                     .thenThrow(new NotFoundException("Autores não encontrados"));
 
-            mockMvc.perform(post(LIVRO_URL)
+            mockMvc.perform(post(Constants.LIVRO_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(request)))
                     .andExpect(status().isNotFound())
@@ -122,7 +121,7 @@ public class LivroControllerTest {
 
             when(livroService.buscarLivro(response.id())).thenReturn(response);
 
-            mockMvc.perform(get(LIVRO_URL + "/{id}", response.id())
+            mockMvc.perform(get(Constants.LIVRO_ID_URL, response.id())
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().json(JsonUtils.convertToJson(response)));
@@ -134,7 +133,7 @@ public class LivroControllerTest {
 
             when(livroService.buscarLivro(idInvalid)).thenThrow(new NotFoundException("Livro não encontrado"));
 
-            mockMvc.perform(get(LIVRO_URL + "/{id}", idInvalid)
+            mockMvc.perform(get(Constants.LIVRO_ID_URL, idInvalid)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
@@ -146,7 +145,7 @@ public class LivroControllerTest {
         @ParameterizedTest
         @MethodSource("parametrosProvider")
         void deveBuscarLivrosComOuSemFiltro(StatusLivroEnum statusParam) throws Exception {
-            String url = Objects.isNull(statusParam) ? LIVRO_URL : LIVRO_URL + "?status=" + statusParam;
+            String url = Objects.isNull(statusParam) ? Constants.LIVRO_URL : Constants.LIVRO_URL + "?status=" + statusParam;
             List<LivroResumoDTO> livros = List.of(LivroMock.getLivroResumoDTOMock(), LivroMock.getLivroResumoDTOMock());
 
             Pageable pageable = PageMock.getPageableMock();
