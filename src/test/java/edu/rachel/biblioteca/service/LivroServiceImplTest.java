@@ -11,6 +11,7 @@ import edu.rachel.biblioteca.mock.LivroMock;
 import edu.rachel.biblioteca.mock.PageMock;
 import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.model.Livro;
+import edu.rachel.biblioteca.repository.AluguelRepository;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
@@ -53,6 +54,9 @@ class LivroServiceImplTest {
     @Mock
     private LocatarioRepository locatarioRepository;
 
+    @Mock
+    private AluguelRepository aluguelRepository;
+
     private AutorMapper autorMapper;
 
     private LivroMapper livroMapper;
@@ -73,7 +77,7 @@ class LivroServiceImplTest {
 
         livroValidator = new LivroValidator(livroRepository, autorRepository);
         autorValidator = new AutorValidator(autorRepository);
-        locatarioValidator = new LocatarioValidator(locatarioRepository);
+        locatarioValidator = new LocatarioValidator(aluguelRepository, locatarioRepository);
 
         service = new LivroServiceImpl(locatarioValidator, autorValidator, livroValidator,
                 livroMapper, autorRepository, livroRepository);

@@ -38,6 +38,13 @@ public class LocatarioController implements LocatarioApi {
     }
 
     @Override
+    public ResponseEntity<Void> deletarLocatario(UUID id) {
+        locatarioService.deletarLocatario(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
     public ResponseEntity<List<LivroResumoDTO>> buscarLivrosPorLocatario(UUID id) {
         List<LivroResumoDTO> response = livroService.buscarLivrosPorLocatario(id);
 

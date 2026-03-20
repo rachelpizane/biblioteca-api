@@ -12,28 +12,14 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-
-    @ExceptionHandler(StatusInvalidoException.class)
-    public ResponseEntity<ErrorResponseDTO> handleStatusInvalidoException(
-            StatusInvalidoException ex) {
-
-        ErrorResponseDTO response = new ErrorResponseDTO(
-                HttpStatus.CONFLICT.value(),
-                List.of(ex.getMessage())
-        );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
-    @ExceptionHandler(LivroAlugadoException.class)
-    public ResponseEntity<ErrorResponseDTO> handleLivroAlugadoException(
-            LivroAlugadoException ex) {
+    @ExceptionHandler(ConflictBusinessException.class)
+    public ResponseEntity<ErrorResponseDTO> handleConflictBusinessException(
+            ConflictBusinessException ex) {
 
         ErrorResponseDTO response = new ErrorResponseDTO(
                 HttpStatus.CONFLICT.value(),
                 List.of(ex.getMessage())
         );
-
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
@@ -52,17 +38,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponseDTO> handleBusinessException(
             BusinessException ex) {
-
-        ErrorResponseDTO response = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                List.of(ex.getMessage())
-        );
-        return ResponseEntity.badRequest().body(response);
-    }
-
-    @ExceptionHandler(EnumInvalidoException.class)
-    public ResponseEntity<ErrorResponseDTO> handleEnumInvalidoException(
-            EnumInvalidoException ex) {
 
         ErrorResponseDTO response = new ErrorResponseDTO(
                 HttpStatus.BAD_REQUEST.value(),

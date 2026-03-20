@@ -8,4 +8,6 @@ public interface LocatarioService {
     LocatarioResponseDTO cadastrarLocatario(LocatarioRequestDTO request);
 
     LocatarioResponseDTO buscarLocatario(UUID id);
+
+    void deletarLocatario(UUID id);
 }

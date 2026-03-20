@@ -2,7 +2,7 @@ package edu.rachel.biblioteca.exception;
 
 import edu.rachel.biblioteca.enums.StatusEnum;
 
-public class StatusInvalidoException extends RuntimeException {
+public class StatusInvalidoException extends ConflictBusinessException {
 
     public StatusInvalidoException(String message) {
         super(message);

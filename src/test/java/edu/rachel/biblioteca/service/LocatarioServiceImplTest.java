@@ -7,6 +7,7 @@ import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.LocatarioMapper;
 import edu.rachel.biblioteca.mock.LocatarioMock;
 import edu.rachel.biblioteca.model.Locatario;
+import edu.rachel.biblioteca.repository.AluguelRepository;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
 import edu.rachel.biblioteca.service.impl.LocatarioServiceImpl;
 import edu.rachel.biblioteca.validator.LocatarioValidator;
@@ -30,8 +31,11 @@ import static org.mockito.Mockito.never;
 @ExtendWith(MockitoExtension.class)
 class LocatarioServiceImplTest {
     @Mock
-    private LocatarioRepository repository;
-
+    private LocatarioRepository locatarioRepository;
+    
+    @Mock
+    private AluguelRepository aluguelRepository;
+    
     private LocatarioMapper mapper;
 
     private LocatarioValidator validator;
@@ -41,8 +45,8 @@ class LocatarioServiceImplTest {
     @BeforeEach
     void setUp() {
         mapper =  Mappers.getMapper(LocatarioMapper.class);
-        validator = new LocatarioValidator(repository);
-        service = new LocatarioServiceImpl(validator, mapper, repository);
+        validator = new LocatarioValidator(aluguelRepository, locatarioRepository);
+        service = new LocatarioServiceImpl(validator, mapper, locatarioRepository, aluguelRepository);
     }
 
     @Nested
@@ -52,39 +56,39 @@ class LocatarioServiceImplTest {
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
             Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
 
-            when(repository.save(any(Locatario.class))).thenReturn(locatario);
+            when(locatarioRepository.save(any(Locatario.class))).thenReturn(locatario);
 
             LocatarioResponseDTO response = service.cadastrarLocatario(request);
 
             assertEquals(response.id(), locatario.getId());
-            verify(repository, times(1)).save(any(Locatario.class));
+            verify(locatarioRepository, times(1)).save(any(Locatario.class));
         }
 
         @Test
         void deveLancarBusinessExceptionQuandoExistirLocatarioComCPF(){
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(repository.existsByCpf(request.cpf())).thenReturn(true);
+            when(locatarioRepository.existsByCpf(request.cpf())).thenReturn(true);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarLocatario(request);
             });
 
-            verify(repository, never()).save(any(Locatario.class));
+            verify(locatarioRepository, never()).save(any(Locatario.class));
         }
 
         @Test
         void deveLancarBusinessExceptionQuandoExistirLocatarioComEmail(){
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(repository.existsByCpf(request.cpf())).thenReturn(false);
-            when(repository.existsByEmailIgnoreCase(request.email())).thenReturn(true);
+            when(locatarioRepository.existsByCpf(request.cpf())).thenReturn(false);
+            when(locatarioRepository.existsByEmailIgnoreCase(request.email())).thenReturn(true);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarLocatario(request);
             });
 
-            verify(repository, never()).save(any(Locatario.class));
+            verify(locatarioRepository, never()).save(any(Locatario.class));
         }
     }
 
@@ -93,7 +97,7 @@ class LocatarioServiceImplTest {
         @Test
         void deveBuscarLocatarioComSucesso() {
             Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
-            when(repository.findById(locatario.getId())).thenReturn(Optional.of(locatario));
+            when(locatarioRepository.findById(locatario.getId())).thenReturn(Optional.of(locatario));
 
             LocatarioResponseDTO response = service.buscarLocatario(locatario.getId());
 
@@ -104,7 +108,7 @@ class LocatarioServiceImplTest {
         void deveLancarNotFoundExceptionQuandoLocatarioNaoExistir(){
             UUID idInvalid = UUID.randomUUID();
 
-            when(repository.findById(idInvalid)).thenReturn(Optional.empty());
+            when(locatarioRepository.findById(idInvalid)).thenReturn(Optional.empty());
 
             assertThrows(NotFoundException.class, () -> {
                 service.buscarLocatario(idInvalid);
