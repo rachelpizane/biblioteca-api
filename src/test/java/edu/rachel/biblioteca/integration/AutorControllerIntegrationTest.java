@@ -7,6 +7,7 @@ import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.model.Livro;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
+import edu.rachel.biblioteca.utils.Constants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class AutorControllerIntegrationTest {
+class AutorControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -41,11 +42,7 @@ public class AutorControllerIntegrationTest {
     
     @MockitoSpyBean
     private LivroRepository livroRepository;
-
-    public static final String AUTOR_URL = "/autores";
-    public static final String AUTOR_ID_URL = AUTOR_URL  + "/{id}";
-    public static final String AUTOR_LIVROS_URL = AUTOR_ID_URL + "/livros";
-
+    
     @AfterEach
     void tearDown() {
         livroRepository.deleteAll();
@@ -57,7 +54,7 @@ public class AutorControllerIntegrationTest {
         void deveCadastrarAutorCorretamente(){
             AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
 
-            ResponseEntity<AutorResponseDTO> response = restTemplate.postForEntity(AUTOR_URL, request, AutorResponseDTO.class);
+            ResponseEntity<AutorResponseDTO> response = restTemplate.postForEntity(Constants.AUTOR_URL, request, AutorResponseDTO.class);
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody().id());
@@ -70,7 +67,7 @@ public class AutorControllerIntegrationTest {
 
             AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
 
-            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(AUTOR_URL, request, ErrorResponseDTO.class);
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(Constants.AUTOR_URL, request, ErrorResponseDTO.class);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("CPF"));
@@ -85,7 +82,7 @@ public class AutorControllerIntegrationTest {
             Autor autor = criarAutor();
 
             ResponseEntity<AutorResponseDTO> response = restTemplate.getForEntity(
-                    AUTOR_ID_URL,
+                    Constants.AUTOR_ID_URL,
                     AutorResponseDTO.class,
                     autor.getId()
             );
@@ -97,7 +94,7 @@ public class AutorControllerIntegrationTest {
         @Test
         void deveRetornarErroQuandoAutorNaoExistir(){
             ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
-                    AUTOR_ID_URL,
+                    Constants.AUTOR_ID_URL,
                     ErrorResponseDTO.class,
                     UUID.randomUUID()
             );
@@ -123,7 +120,7 @@ public class AutorControllerIntegrationTest {
             List<UUID> autoresIds = List.of(autor1.getId(), autor2.getId());
 
             ResponseEntity<PageResponseDTO<AutorResumoDTO>> response = restTemplate.exchange(
-                    AUTOR_URL,
+                    Constants.AUTOR_URL,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
@@ -141,7 +138,7 @@ public class AutorControllerIntegrationTest {
             String parametro = "?nome=maia";
 
             ResponseEntity<PageResponseDTO<AutorResumoDTO>> response = restTemplate.exchange(
-                    AUTOR_URL + parametro,
+                    Constants.AUTOR_URL + parametro,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
@@ -163,7 +160,7 @@ public class AutorControllerIntegrationTest {
             Livro livro = criarLivro(autor);
 
             ResponseEntity<List<LivroResumoDTO>> response = restTemplate.exchange(
-                    AUTOR_LIVROS_URL,
+                    Constants.AUTOR_LIVROS_URL,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {},
@@ -178,7 +175,7 @@ public class AutorControllerIntegrationTest {
         @Test
         void deveRetornarErroQuandoAutorNaoExistir(){
             ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
-                    AUTOR_LIVROS_URL,
+                    Constants.AUTOR_LIVROS_URL,
                     ErrorResponseDTO.class,
                     UUID.randomUUID()
             );

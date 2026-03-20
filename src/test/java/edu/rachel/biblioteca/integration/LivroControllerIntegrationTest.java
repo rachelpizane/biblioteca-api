@@ -11,6 +11,7 @@ import edu.rachel.biblioteca.repository.AluguelRepository;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
+import edu.rachel.biblioteca.utils.Constants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -36,7 +37,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class LivroControllerIntegrationTest {
+class LivroControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
@@ -51,9 +52,7 @@ public class LivroControllerIntegrationTest {
 
     @MockitoSpyBean
     private AluguelRepository aluguelRepository;
-
-    public static final String LIVRO_URL = "/livros";
-
+    
     @AfterEach
     void tearDown() {
         aluguelRepository.deleteAll();
@@ -71,7 +70,7 @@ public class LivroControllerIntegrationTest {
 
 
             ResponseEntity<LivroResponseDTO> response = restTemplate.postForEntity(
-                    LIVRO_URL, request, LivroResponseDTO.class);
+                    Constants.LIVRO_URL, request, LivroResponseDTO.class);
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody().id());
@@ -85,7 +84,7 @@ public class LivroControllerIntegrationTest {
             livroRepository.save(LivroMock.getLivroMock(autor));
             LivroRequestDTO request = LivroMock.getLivroRequestDTOMock(List.of(autor.getId()));
 
-            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(LIVRO_URL, request, ErrorResponseDTO.class);
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(Constants.LIVRO_URL, request, ErrorResponseDTO.class);
 
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("ISBN"));
@@ -96,7 +95,7 @@ public class LivroControllerIntegrationTest {
         void deveRetornarErroQuandoAutorNaoEncontrado(){
             LivroRequestDTO request = LivroMock.getLivroRequestDTOMock(List.of(UUID.randomUUID()));
 
-            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(LIVRO_URL, request, ErrorResponseDTO.class);
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.postForEntity(Constants.LIVRO_URL, request, ErrorResponseDTO.class);
 
             assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("não encontrado"));
@@ -112,7 +111,7 @@ public class LivroControllerIntegrationTest {
             Livro livro = livroRepository.save(LivroMock.getLivroMock(autor));
 
             ResponseEntity<LivroResponseDTO> response = restTemplate.getForEntity(
-                    LIVRO_URL + "/{id}",
+                    Constants.LIVRO_ID_URL,
                     LivroResponseDTO.class,
                     livro.getId()
             );
@@ -125,7 +124,7 @@ public class LivroControllerIntegrationTest {
         @Test
         void deveRetornarErroQuandoLivroNaoExistir(){
             ResponseEntity<ErrorResponseDTO> response = restTemplate.getForEntity(
-                    LIVRO_URL + "/{id}",
+                    Constants.LIVRO_ID_URL,
                     ErrorResponseDTO.class,
                     UUID.randomUUID()
             );
@@ -153,7 +152,7 @@ public class LivroControllerIntegrationTest {
             List<UUID> livrosIds = List.of(livro1.getId(), livro2.getId());
 
             ResponseEntity<PageResponseDTO<LivroResumoDTO>> response = restTemplate.exchange(
-                    LIVRO_URL,
+                    Constants.LIVRO_URL,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
@@ -178,7 +177,7 @@ public class LivroControllerIntegrationTest {
             List<UUID> livrosIds = List.of(livro1.getId());
 
             ResponseEntity<PageResponseDTO<LivroResumoDTO>> response = restTemplate.exchange(
-                    LIVRO_URL + statusParam,
+                    Constants.LIVRO_URL + statusParam,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}

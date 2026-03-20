@@ -10,6 +10,7 @@ import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.exception.StatusInvalidoException;
 import edu.rachel.biblioteca.mock.AluguelMock;
 import edu.rachel.biblioteca.service.AluguelService;
+import edu.rachel.biblioteca.utils.Constants;
 import edu.rachel.biblioteca.utils.JsonUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -39,10 +40,6 @@ class AluguelControllerTest {
     @MockitoBean
     private AluguelService aluguelService;
 
-    public static final String ALUGUEL_URL = "/alugueis";
-    public static final String ALUGUEL_ID_URL = ALUGUEL_URL + "/{id}";
-    public static final String ALUGUEL_STATUS_URL = ALUGUEL_ID_URL + "/status";
-
     @Nested
     class CadastrarAluguelTests {
         @Test
@@ -52,7 +49,7 @@ class AluguelControllerTest {
 
             when(aluguelService.cadastrarAluguel(request)).thenReturn(response);
 
-            mockMvc.perform(post(ALUGUEL_URL)
+            mockMvc.perform(post(Constants.ALUGUEL_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(request)))
                     .andExpect(status().isCreated())
@@ -63,7 +60,7 @@ class AluguelControllerTest {
         @MethodSource("requestInvalidos")
         void deveRetornarBadRequestParaDadosInvalidos(AluguelRequestDTO requestInvalido) throws Exception {
 
-            mockMvc.perform(post(ALUGUEL_URL)
+            mockMvc.perform(post(Constants.ALUGUEL_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(requestInvalido)))
                     .andExpect(status().isBadRequest())
@@ -90,7 +87,7 @@ class AluguelControllerTest {
 
             when(aluguelService.buscarAluguel(response.id())).thenReturn(response);
 
-            mockMvc.perform(get(ALUGUEL_ID_URL, response.id())
+            mockMvc.perform(get(Constants.ALUGUEL_ID_URL, response.id())
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().json(JsonUtils.convertToJson(response)));
@@ -102,7 +99,7 @@ class AluguelControllerTest {
 
             when(aluguelService.buscarAluguel(idInvalid)).thenThrow(new NotFoundException("Aluguel não encontrado"));
 
-            mockMvc.perform(get(ALUGUEL_ID_URL, idInvalid)
+            mockMvc.perform(get(Constants.ALUGUEL_ID_URL, idInvalid)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
@@ -122,7 +119,7 @@ class AluguelControllerTest {
             when(aluguelService.atualizarStatusAluguel(idAluguel, request.status())).thenReturn(response);
 
             mockMvc.perform(
-                    patch(ALUGUEL_STATUS_URL, idAluguel)
+                    patch(Constants.ALUGUEL_STATUS_URL, idAluguel)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(request)
                             )
@@ -137,7 +134,7 @@ class AluguelControllerTest {
             StatusRequestDTO request= new StatusRequestDTO(null);
 
             mockMvc.perform(
-                            patch(ALUGUEL_STATUS_URL, idAluguel)
+                            patch(Constants.ALUGUEL_STATUS_URL, idAluguel)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(JsonUtils.convertToJson(request)
                                     )
@@ -155,7 +152,7 @@ class AluguelControllerTest {
                     .thenThrow(new StatusInvalidoException("Não é possível alterar status"));
 
             mockMvc.perform(
-                            patch(ALUGUEL_STATUS_URL, idInvalid)
+                            patch(Constants.ALUGUEL_STATUS_URL, idInvalid)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(JsonUtils.convertToJson(request)
                                     )
