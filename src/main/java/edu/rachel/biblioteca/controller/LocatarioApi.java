@@ -67,6 +67,33 @@ public interface LocatarioApi {
     ResponseEntity<LocatarioResponseDTO> buscarLocatario(@PathVariable UUID id);
 
     @Operation(
+            summary = "Deletar um locatário",
+            description = "Deleta um locatário pelo seu id"
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "Locatário deletado com sucesso"
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Locatário não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "409",
+            description = "Locatário não pode ser deletado: há aluguéis em andamento. " +
+                    "Finalize os aluguéis antes de tentar novamente.",
+
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @DeleteMapping("/{id}")
+    ResponseEntity<Void> deletarLocatario(@PathVariable UUID id);
+
+    @Operation(
             summary = "Buscar livros alugados por um locatario",
             description = "Retorna uma lista de livros que já foram alugados por um locatário"
     )
