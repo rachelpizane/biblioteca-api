@@ -13,9 +13,11 @@ import edu.rachel.biblioteca.model.Autor;
 import edu.rachel.biblioteca.model.Livro;
 import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
+import edu.rachel.biblioteca.repository.LocatarioRepository;
 import edu.rachel.biblioteca.service.impl.LivroServiceImpl;
 import edu.rachel.biblioteca.validator.AutorValidator;
 import edu.rachel.biblioteca.validator.LivroValidator;
+import edu.rachel.biblioteca.validator.LocatarioValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,9 @@ class LivroServiceImplTest {
     @Mock
     private LivroRepository livroRepository;
 
+    @Mock
+    private LocatarioRepository locatarioRepository;
+
     private AutorMapper autorMapper;
 
     private LivroMapper livroMapper;
@@ -55,6 +60,8 @@ class LivroServiceImplTest {
     private LivroValidator livroValidator;
 
     private AutorValidator autorValidator;
+
+    private LocatarioValidator locatarioValidator;
 
     private LivroServiceImpl service;
 
@@ -66,8 +73,10 @@ class LivroServiceImplTest {
 
         livroValidator = new LivroValidator(livroRepository, autorRepository);
         autorValidator = new AutorValidator(autorRepository);
+        locatarioValidator = new LocatarioValidator(locatarioRepository);
 
-        service = new LivroServiceImpl(autorValidator, livroValidator, livroMapper, autorRepository, livroRepository);
+        service = new LivroServiceImpl(locatarioValidator, autorValidator, livroValidator,
+                livroMapper, autorRepository, livroRepository);
     }
 
     @Nested
@@ -227,13 +236,41 @@ class LivroServiceImplTest {
         }
 
         @Test
-        void deveLançarNotFoundExceptionQuandoAutorNaoEncontrado(){
+        void deveLancarNotFoundExceptionQuandoAutorNaoEncontrado(){
             UUID idInvalid = UUID.randomUUID();
 
             when(autorRepository.existsById(idInvalid)).thenReturn(false);
 
             assertThrows(NotFoundException.class, () -> {
                 service.buscarLivrosPorAutor(idInvalid);
+            });
+        }
+    }
+
+    @Nested
+    class BuscarLivrosLocatarioTests {
+        @Test
+        void deveBuscarLivrosPorLocatarioCorretamente(){
+            UUID locatarioId = UUID.randomUUID();
+            Livro livro = LivroMock.getLivroMock(UUID.randomUUID(), UUID.randomUUID());
+
+            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
+            when(livroRepository.findLivrosAlugadosPorLocatarioId(locatarioId)).thenReturn(List.of(livro));
+
+            List<LivroResumoDTO> livros = service.buscarLivrosPorLocatario(locatarioId);
+
+            assertThat(livros).hasSize(1);
+            assertEquals(livros.getFirst().id(), livro.getId());
+        }
+
+        @Test
+        void deveLancarNotFoundExceptionQuandoLocatarioNaoEncontrado(){
+            UUID idInvalid = UUID.randomUUID();
+
+            when(locatarioRepository.existsById(idInvalid)).thenReturn(false);
+
+            assertThrows(NotFoundException.class, () -> {
+                service.buscarLivrosPorLocatario(idInvalid);
             });
         }
     }
