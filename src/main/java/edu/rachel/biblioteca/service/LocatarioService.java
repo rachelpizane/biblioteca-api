@@ -7,6 +7,8 @@ import java.util.UUID;
 public interface LocatarioService {
     LocatarioResponseDTO cadastrarLocatario(LocatarioRequestDTO request);
 
+    LocatarioResponseDTO atualizarLocatario(UUID id, LocatarioRequestDTO request);
+
     LocatarioResponseDTO buscarLocatario(UUID id);
 
     void deletarLocatario(UUID id);

@@ -46,6 +46,37 @@ public interface LocatarioApi {
     ResponseEntity<LocatarioResponseDTO> cadastrarLocatario(@Valid @RequestBody(required = true) LocatarioRequestDTO request);
 
     @Operation(
+            summary = "Atualizar um locatário",
+            description = "Recebe os dados de um locatário e retorna o locatário atualizado"
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Locatário atualizado com sucesso",
+            content = @Content(
+                    schema = @Schema(implementation = LocatarioResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Dados inválidos",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Locatário não encontrado",
+            content = @Content(
+                    schema = @Schema(implementation = ErrorResponseDTO.class)
+            )
+    )
+    @PutMapping("/{id}")
+    ResponseEntity<LocatarioResponseDTO> atualizarLocatario(
+            @PathVariable UUID id,
+            @Valid @RequestBody(required = true) LocatarioRequestDTO request
+    );
+
+    @Operation(
             summary = "Buscar um locatário",
             description = "Busca um locatário pelo seu id"
     )

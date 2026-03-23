@@ -23,29 +23,46 @@ public class LocatarioValidator {
         validarEmailUnico(request.email());
     }
 
+    public void validarAtualizacao(UUID id, LocatarioRequestDTO request) {
+        validarExistencia(id);
+        validarCpfUnico(request.cpf(), id);
+        validarEmailUnico(request.email(), id);
+    }
+
+    public void validarExclusao(UUID id) {
+        validarExistencia(id);
+        validarLocatarioSemAluguelEmAndamento(id);
+    }
+
     public void validarExistencia(UUID id) {
         if(!locatarioRepository.existsById(id)) {
             throw new NotFoundException("Locatário não encontrado");
         }
     }
 
-    public void validarLocatarioSemAluguelEmAndamento(UUID id){
+    private void validarLocatarioSemAluguelEmAndamento(UUID id){
         if(aluguelRepository.existsByLocatarioIdAndStatus(id, StatusEnum.EM_ANDAMENTO)) {
             throw new ConflictBusinessException("Locatário possui aluguéis em andamento");
         }
     }
 
-    private void validarCpfUnico(String cpf){
-        if(locatarioRepository.existsByCpf(cpf)) {
+    private void validarCpfUnico(String cpf) {
+        validarCpfUnico(cpf, null);
+    }
+
+    private void validarEmailUnico(String email){
+        validarEmailUnico(email, null);
+    }
+
+    private void validarCpfUnico(String cpf, UUID id) {
+        if (locatarioRepository.existsByCpfAndIdNotNullable(cpf, id)) {
             throw new BusinessException("Já existe um locatário cadastrado com o CPF informado");
         }
     }
 
-    private void validarEmailUnico(String email){
-        if(locatarioRepository.existsByEmailIgnoreCase(email)) {
+    private void validarEmailUnico(String email, UUID id){
+        if(locatarioRepository.existsByEmailIgnoreCaseAndIdNotNullable(email, id)) {
             throw new BusinessException("Já existe um locatário cadastrado com o e-mail informado");
         }
     }
-
-
 }
