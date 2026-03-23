@@ -31,6 +31,13 @@ public class LocatarioController implements LocatarioApi {
     }
 
     @Override
+    public ResponseEntity<LocatarioResponseDTO> atualizarLocatario(UUID id, LocatarioRequestDTO request) {
+        LocatarioResponseDTO response = locatarioService.atualizarLocatario(id, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
     public ResponseEntity<LocatarioResponseDTO> buscarLocatario(UUID id) {
         LocatarioResponseDTO response = locatarioService.buscarLocatario(id);
 

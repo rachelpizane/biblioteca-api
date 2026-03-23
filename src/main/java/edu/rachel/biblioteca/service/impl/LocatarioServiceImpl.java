@@ -32,6 +32,14 @@ public class LocatarioServiceImpl implements LocatarioService {
     }
 
     @Override
+    public LocatarioResponseDTO atualizarLocatario(UUID id, LocatarioRequestDTO request) {
+        validator.validarAtualizacao(id, request);
+        Locatario locatarioAtualizado = locatarioRepository.save(mapper.paraEntidade(id, request));
+
+        return mapper.paraDto(locatarioAtualizado);
+    }
+
+    @Override
     public LocatarioResponseDTO buscarLocatario(UUID id) {
         return mapper.paraDto(buscarLocatarioById(id));
     }
@@ -39,8 +47,7 @@ public class LocatarioServiceImpl implements LocatarioService {
     @Override
     @Transactional
     public void deletarLocatario(UUID id) {
-        Locatario locatario = buscarLocatarioById(id);
-        validator.validarLocatarioSemAluguelEmAndamento(id);
+        validator.validarExclusao(id);
 
         aluguelRepository.deleteByLocatarioId(id);
         locatarioRepository.deleteById(id);
