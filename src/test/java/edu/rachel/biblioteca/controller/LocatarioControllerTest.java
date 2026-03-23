@@ -4,6 +4,7 @@ import edu.rachel.biblioteca.controller.impl.LocatarioController;
 import edu.rachel.biblioteca.dto.LivroResumoDTO;
 import edu.rachel.biblioteca.dto.LocatarioResponseDTO;
 import edu.rachel.biblioteca.dto.LocatarioRequestDTO;
+import edu.rachel.biblioteca.exception.ConflictBusinessException;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mock.LivroMock;
 import edu.rachel.biblioteca.mock.LocatarioMock;
@@ -28,9 +29,8 @@ import java.util.stream.Stream;
 
 import static edu.rachel.biblioteca.utils.Constants.LOCATARIO_URL;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(LocatarioController.class)
@@ -158,6 +158,47 @@ class LocatarioControllerTest {
             mockMvc.perform(get(Constants.LOCATARIO_LIVROS_URL, idInvalid)
                             .contentType(MediaType.APPLICATION_JSON))
                     .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class ExcluirLocatarioTests {
+        @Test
+        void deveExcluirLocatarioComSucesso() throws Exception {
+            UUID locatarioId = UUID.randomUUID();
+
+            doNothing().when(locatarioService).deletarLocatario(locatarioId);
+
+            mockMvc.perform(delete(Constants.LOCATARIO_ID_URL, locatarioId)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNoContent())
+                    .andExpect(content().string(""));
+        }
+
+        @Test
+        void deveRetornarNotFoundQuandoLocatarioNaoExistir() throws Exception {
+            UUID idInvalid = UUID.randomUUID();
+
+            doThrow(new NotFoundException("Locatário não encontrado"))
+                    .when(locatarioService).deletarLocatario(idInvalid);
+
+            mockMvc.perform(delete(Constants.LOCATARIO_ID_URL, idInvalid)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+
+        @Test
+        void deveRetornarConflictQuandoLocatarioTiverAluguelEmAndamento() throws Exception {
+            UUID locatarioId = UUID.randomUUID();
+
+            doThrow(new ConflictBusinessException("Locatário possui aluguel em andamento"))
+                    .when(locatarioService).deletarLocatario(locatarioId);
+
+            mockMvc.perform(delete(Constants.LOCATARIO_ID_URL, locatarioId)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
     }
