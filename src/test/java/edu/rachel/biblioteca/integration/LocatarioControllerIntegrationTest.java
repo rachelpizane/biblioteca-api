@@ -53,6 +53,7 @@ class LocatarioControllerIntegrationTest {
     @MockitoSpyBean
     private LivroRepository livroRepository;
 
+
     @AfterEach
     void tearDown() {
         aluguelRepository.deleteAll();
@@ -91,7 +92,7 @@ class LocatarioControllerIntegrationTest {
         }
 
         @Test
-        void deveRetornarErroQuandoExistirLocatarioComEmail(){
+        void deveRetornarErroQuandoExistirLocatarioComEmail() {
             locatarioRepository.save(LocatarioMock.getLocatarioMock());
 
             LocatarioRequestDTO request = LocatarioMock
@@ -155,6 +156,45 @@ class LocatarioControllerIntegrationTest {
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertThat(idLivrosRetornados).hasSize(idLivrosEsperados.size());
             assertTrue(idLivrosRetornados.containsAll(idLivrosEsperados));
+        }
+    }
+
+    @Nested
+    class ExcluirLocatarioTests {
+        @Test
+        void deveExcluirLocatarioCorretamente(){
+            Locatario locatario = locatarioRepository.save(LocatarioMock.getLocatarioMock());
+
+            ResponseEntity<Void> response = restTemplate.exchange(
+                    Constants.LOCATARIO_ID_URL,
+                    HttpMethod.DELETE,
+                    null,
+                    Void.class,
+                    locatario.getId()
+            );
+
+            assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+            verify(aluguelRepository, times(1)).deleteByLocatarioId(locatario.getId());
+            verify(locatarioRepository, times(1)).deleteById(locatario.getId());
+        }
+
+        @Test
+        void deveRetornarErroQuandoExcluirLocatarioComAluguelEmAndamento(){
+            Aluguel aluguel = criarAluguel();
+            UUID locatarioId = aluguel.getLocatario().getId();
+
+            ResponseEntity<ErrorResponseDTO> response = restTemplate.exchange(
+                    Constants.LOCATARIO_ID_URL,
+                    HttpMethod.DELETE,
+                    null,
+                    ErrorResponseDTO.class,
+                    locatarioId
+            );
+
+            assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+            assertTrue(response.getBody().mensagens().getFirst().contains("em andamento"));
+            verify(aluguelRepository, never()).deleteByLocatarioId(locatarioId);
+            verify(locatarioRepository, never()).deleteById(locatarioId);
         }
     }
 
