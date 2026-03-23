@@ -61,26 +61,13 @@ class LocatarioControllerTest {
         }
 
         @ParameterizedTest
-        @MethodSource("requestInvalidos")
+        @MethodSource("edu.rachel.biblioteca.controller.LocatarioControllerTest#requestInvalidos")
         void deveRetornarBadRequestParaDadosInvalidos(LocatarioRequestDTO requestInvalido) throws Exception {
-
             mockMvc.perform(post(Constants.LOCATARIO_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(JsonUtils.convertToJson(requestInvalido)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
-        }
-
-        static Stream<LocatarioRequestDTO> requestInvalidos() {
-            return Stream.of(
-                    LocatarioMock.getRequestComCpf("1234567890"),
-                    LocatarioMock.getRequestComCpf("1234567890T"),
-                    LocatarioMock.getRequestComNome(""),
-                    LocatarioMock.getRequestComEmail("email-invalido"),
-                    LocatarioMock.getRequestComTelefone("1199999999"),
-                    LocatarioMock.getRequestComTelefone("1199999999T"),
-                    LocatarioMock.getRequestComDataNascimento(LocalDate.now().plusDays(1))
-            );
         }
 
         @Test
@@ -100,6 +87,35 @@ class LocatarioControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestJson))
                     .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
+        }
+    }
+
+    @Nested
+    class AtualizarLocatarioTests {
+        @Test
+        void deveAtualizarLocatarioCorretamente() throws Exception {
+            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
+            LocatarioResponseDTO response = LocatarioMock.getLocatarioResponseDTOMock();
+            UUID locatarioId = response.id();
+
+            when(locatarioService.atualizarLocatario(locatarioId , request)).thenReturn(response);
+
+            mockMvc.perform(put(Constants.LOCATARIO_ID_URL, response.id())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(JsonUtils.convertToJson(request)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().json(JsonUtils.convertToJson(response)));
+        }
+
+        @ParameterizedTest
+        @MethodSource("edu.rachel.biblioteca.controller.LocatarioControllerTest#requestInvalidos")
+        void deveRetornarBadRequestParaDadosInvalidos(LocatarioRequestDTO requestInvalido) throws Exception {
+            UUID locatarioId = UUID.randomUUID();
+
+            mockMvc.perform(put(Constants.LOCATARIO_ID_URL, locatarioId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(JsonUtils.convertToJson(requestInvalido))).andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
     }
@@ -201,5 +217,17 @@ class LocatarioControllerTest {
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.mensagens.length()").value(greaterThan(0)));
         }
+    }
+
+    public static Stream<LocatarioRequestDTO> requestInvalidos() {
+        return Stream.of(
+                LocatarioMock.getRequestComCpf("1234567890"),
+                LocatarioMock.getRequestComCpf("1234567890T"),
+                LocatarioMock.getRequestComNome(""),
+                LocatarioMock.getRequestComEmail("email-invalido"),
+                LocatarioMock.getRequestComTelefone("1199999999"),
+                LocatarioMock.getRequestComTelefone("1199999999T"),
+                LocatarioMock.getRequestComDataNascimento(LocalDate.now().plusDays(1))
+        );
     }
 }
