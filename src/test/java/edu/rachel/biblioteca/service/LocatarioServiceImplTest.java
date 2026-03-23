@@ -8,7 +8,6 @@ import edu.rachel.biblioteca.exception.ConflictBusinessException;
 import edu.rachel.biblioteca.exception.NotFoundException;
 import edu.rachel.biblioteca.mapper.LocatarioMapper;
 import edu.rachel.biblioteca.mock.LocatarioMock;
-import edu.rachel.biblioteca.model.Aluguel;
 import edu.rachel.biblioteca.model.Locatario;
 import edu.rachel.biblioteca.repository.AluguelRepository;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -71,7 +69,7 @@ class LocatarioServiceImplTest {
         void deveLancarBusinessExceptionQuandoExistirLocatarioComCPF(){
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(locatarioRepository.existsByCpf(request.cpf())).thenReturn(true);
+            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), null)).thenReturn(true);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarLocatario(request);
@@ -84,11 +82,75 @@ class LocatarioServiceImplTest {
         void deveLancarBusinessExceptionQuandoExistirLocatarioComEmail(){
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(locatarioRepository.existsByCpf(request.cpf())).thenReturn(false);
-            when(locatarioRepository.existsByEmailIgnoreCase(request.email())).thenReturn(true);
+            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), null)).thenReturn(false);
+            when(locatarioRepository.existsByEmailIgnoreCaseAndIdNotNullable(request.email(), null)).thenReturn(true);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarLocatario(request);
+            });
+
+            verify(locatarioRepository, never()).save(any(Locatario.class));
+        }
+    }
+
+    @Nested
+    class AtualizarLocatarioTests {
+        @Test
+        void deveAtualizarLocatarioCorretamente(){
+            UUID locatarioId = UUID.randomUUID();
+
+            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
+            Locatario locatario = LocatarioMock.getLocatarioMock(locatarioId);
+
+            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
+            when(locatarioRepository.save(any(Locatario.class))).thenReturn(locatario);
+
+            LocatarioResponseDTO response = service.atualizarLocatario(locatarioId, request);
+
+            assertEquals(response.id(), locatario.getId());
+            verify(locatarioRepository, times(1)).save(any(Locatario.class));
+        }
+
+        @Test
+        void deveLancarNotFoundExceptionQuandoLocatarioNaoExistir(){
+            UUID idInvalid = UUID.randomUUID();
+            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
+
+            when(locatarioRepository.existsById(idInvalid)).thenReturn(false);
+
+            assertThrows(NotFoundException.class, () -> {
+                service.atualizarLocatario(idInvalid, request);
+            });
+        }
+
+        @Test
+        void deveLancarBusinessExceptionQuandoExistirLocatarioComCPF(){
+            UUID locatarioId = UUID.randomUUID();
+
+            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
+
+            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
+            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), locatarioId)).thenReturn(true);
+
+            assertThrows(BusinessException.class, () -> {
+                service.atualizarLocatario(locatarioId, request);
+            });
+
+            verify(locatarioRepository, never()).save(any(Locatario.class));
+        }
+
+        @Test
+        void deveLancarBusinessExceptionQuandoExistirLocatarioComEmail(){
+            UUID locatarioId = UUID.randomUUID();
+
+            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
+
+            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
+            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), locatarioId)).thenReturn(false);
+            when(locatarioRepository.existsByEmailIgnoreCaseAndIdNotNullable(request.email(), locatarioId)).thenReturn(true);
+
+            assertThrows(BusinessException.class, () -> {
+                service.atualizarLocatario(locatarioId, request);
             });
 
             verify(locatarioRepository, never()).save(any(Locatario.class));
@@ -125,7 +187,7 @@ class LocatarioServiceImplTest {
         void deveExcluirLocatarioComSucesso(){
             Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
 
-            when(locatarioRepository.findById(locatario.getId())).thenReturn(Optional.of(locatario));
+            when(locatarioRepository.existsById(locatario.getId())).thenReturn(true);
             when(aluguelRepository.existsByLocatarioIdAndStatus(locatario.getId(), StatusEnum.EM_ANDAMENTO))
                     .thenReturn(false);
 
@@ -139,7 +201,7 @@ class LocatarioServiceImplTest {
         void deveLancarNotFoundExceptionQuandoLocatarioNaoExistir(){
             UUID idInvalid = UUID.randomUUID();
 
-            when(locatarioRepository.findById(idInvalid)).thenReturn(Optional.empty());
+            when(locatarioRepository.existsById(idInvalid)).thenReturn(false);
 
             assertThrows(NotFoundException.class, () -> {
                 service.deletarLocatario(idInvalid);
@@ -151,13 +213,14 @@ class LocatarioServiceImplTest {
         @Test
         void deveLancarConflictBusinessExceptionQuandoLocatarioTiverAluguelEmAndamento(){
             Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
+            UUID locatarioId = locatario.getId();
 
-            when(locatarioRepository.findById(locatario.getId())).thenReturn(Optional.of(locatario));
-            when(aluguelRepository.existsByLocatarioIdAndStatus(locatario.getId(), StatusEnum.EM_ANDAMENTO))
+            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
+            when(aluguelRepository.existsByLocatarioIdAndStatus(locatarioId, StatusEnum.EM_ANDAMENTO))
                     .thenReturn(true);
 
             assertThrows(ConflictBusinessException.class, () -> {
-                service.deletarLocatario(locatario.getId());
+                service.deletarLocatario(locatarioId);
             });
 
             verify(locatarioRepository, never()).save(any(Locatario.class));

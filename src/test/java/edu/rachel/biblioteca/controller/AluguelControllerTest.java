@@ -71,6 +71,7 @@ class AluguelControllerTest {
             return Stream.of(
                     AluguelMock.getRequestComDataRetiradaEDevolucao(null, null),
                     AluguelMock.getRequestComDataRetiradaEDevolucao(LocalDate.now().plusDays(1), null),
+                    AluguelMock.getRequestComDataRetiradaEDevolucao(null, LocalDate.now().plusDays(1)),
                     AluguelMock.getRequestComDataRetiradaEDevolucao(LocalDate.now(), LocalDate.now().minusDays(1)),
                     AluguelMock.getRequestComLocatarioId(null),
                     AluguelMock.getRequestComLivrosIds(null),

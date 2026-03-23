@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -104,6 +105,32 @@ class LocatarioControllerIntegrationTest {
             assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
             assertTrue(response.getBody().mensagens().getFirst().contains("e-mail"));
             verify(locatarioRepository, times(1)).save(any(Locatario.class));
+        }
+    }
+
+    @Nested
+    class AtualizarLocatarioTests {
+        @Test
+        void deveAtualizarLocatarioComSucesso(){
+            Locatario locatario = locatarioRepository.save(LocatarioMock.getLocatarioMock());
+            LocatarioRequestDTO request = LocatarioMock
+                    .getRequestComNome("Laura");
+
+            HttpEntity<LocatarioRequestDTO> requestEntity = new HttpEntity<>(request);
+
+            ResponseEntity<LocatarioResponseDTO> response = restTemplate.exchange(
+                    Constants.LOCATARIO_ID_URL,
+                    HttpMethod.PUT,
+                    requestEntity,
+                    LocatarioResponseDTO.class,
+                    locatario.getId()
+            );
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(locatario.getId(), response.getBody().id());
+            assertEquals(request.nome(), response.getBody().nome());
+            verify(locatarioRepository, times(2)).save(any(Locatario.class));
+            assertThat(locatarioRepository.findAll()).hasSize(1);
         }
     }
 
