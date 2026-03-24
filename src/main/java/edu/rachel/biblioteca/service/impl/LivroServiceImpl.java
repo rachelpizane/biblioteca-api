@@ -13,9 +13,7 @@ import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.service.LivroService;
 import edu.rachel.biblioteca.utils.PageUtils;
-import edu.rachel.biblioteca.validator.AutorValidator;
 import edu.rachel.biblioteca.validator.LivroValidator;
-import edu.rachel.biblioteca.validator.LocatarioValidator;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,16 +30,14 @@ import java.util.stream.Collectors;
 @Service
 public class LivroServiceImpl implements LivroService {
 
-    private final LocatarioValidator locatarioValidator;
-    private final AutorValidator autorValidator;
-    private final LivroValidator livroValidator;
+    private final LivroValidator validator;
     private final LivroMapper mapper;
     private final AutorRepository autorRepository;
     private final LivroRepository livroRepository;
 
     @Override
     public LivroResponseDTO cadastrarLivro(LivroRequestDTO request) {
-        livroValidator.validar((request));
+        validator.validarCadastro((request));
 
         Livro livro = criarLivro(request);
         Livro livroSalvo = livroRepository.save(livro);
@@ -66,7 +62,8 @@ public class LivroServiceImpl implements LivroService {
 
     @Override
     public List<LivroResumoDTO> buscarLivrosPorAutor(UUID autorId) {
-        autorValidator.validarExistencia(autorId);
+        validator.validarAutorExistente(autorId);
+
         List<Livro> livros = livroRepository.findLivrosPorAutorId(autorId);
 
         return mapper.toLivroResumoDTOList(livros);
@@ -74,7 +71,8 @@ public class LivroServiceImpl implements LivroService {
 
     @Override
     public List<LivroResumoDTO> buscarLivrosPorLocatario(UUID locatarioId) {
-        locatarioValidator.validarExistencia(locatarioId);
+        validator.validarLocatarioExistente(locatarioId);
+
         List<Livro> livros = livroRepository.findLivrosAlugadosPorLocatarioId(locatarioId);
 
         return mapper.toLivroResumoDTOList(livros);

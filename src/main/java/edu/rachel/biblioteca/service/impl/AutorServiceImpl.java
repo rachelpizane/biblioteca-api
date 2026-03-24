@@ -22,13 +22,14 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 public class AutorServiceImpl implements AutorService {
+
     private final AutorValidator validator;
     private final AutorMapper mapper;
     private final AutorRepository repository;
 
     @Override
     public AutorResponseDTO cadastrarAutor(AutorRequestDTO request) {
-        validator.validar(request);
+        validator.validarCadastro(request);
         Autor autorSalvo = repository.save(mapper.paraEntidade(request));
 
         return mapper.paraDto(autorSalvo);
