@@ -1,10 +1,10 @@
 package edu.rachel.biblioteca.validator;
 
 import edu.rachel.biblioteca.dto.LivroRequestDTO;
+import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.exception.BusinessException;
+import edu.rachel.biblioteca.exception.LivroAlugadoException;
 import edu.rachel.biblioteca.exception.NotFoundException;
-import edu.rachel.biblioteca.model.Autor;
-import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -14,33 +14,47 @@ import java.util.*;
 @AllArgsConstructor
 @Component
 public class LivroValidator {
-    private final LivroRepository livroRepository;
-    private final AutorRepository autorRepository;
 
-    public void validar(LivroRequestDTO request) {
+    private final LivroRepository repository;
+    private final AutorValidator autorValidator;
+    private final LocatarioValidator locatarioValidator;
+
+    public void validarCadastro(LivroRequestDTO request) {
         validarIsbnUnico(request.isbn());
-        validarExistenciaAutores(request.autoresIds());
+        autorValidator.validarExistencia(request.autoresIds());
     }
 
-    private void validarIsbnUnico(String isbn){
-        if(livroRepository.existsByIsbn(isbn)) {
-            throw new BusinessException("Já existe um livro cadastrado com o ISBN informado");
+    public void validarExistencia(List<UUID> livrosIds) {
+        List<UUID> livrosIdsRecebidos = new ArrayList<>(livrosIds);
+        List<UUID> livrosIdsEncontrados = repository.findLivrosIdsByIdIn(livrosIds);
+
+        livrosIdsRecebidos.removeAll(livrosIdsEncontrados );
+
+        if (!livrosIdsRecebidos.isEmpty()) {
+            throw new NotFoundException("Livros não encontrados: " + livrosIdsRecebidos);
         }
     }
 
-    private void validarExistenciaAutores(List<UUID> autoresIds) {
-        List<UUID> idRecebidos = new ArrayList<>(autoresIds);
+    public void validarAutorExistente(UUID autorId){
+        autorValidator.validarExistencia(autorId);
+    }
 
-        List<Autor> autores = autorRepository.findAllById(autoresIds);
+    public void validarLocatarioExistente(UUID locatarioId){
+        locatarioValidator.validarExistencia(locatarioId);
+    }
 
-        List<UUID> idsEncontrados = autores.stream()
-                .map(Autor::getId)
-                        .toList();
+    public void validarLivrosDisponiveis(List<UUID> livrosIds) {
+        List<UUID> livrosIdsAlugados = repository
+                .findLivrosIdsComAluguelPorStatus(livrosIds, StatusEnum.EM_ANDAMENTO);
 
-        idRecebidos.removeAll(idsEncontrados);
+        if (!livrosIdsAlugados.isEmpty()) {
+            throw new LivroAlugadoException("Livros com aluguel em andamento: " + livrosIdsAlugados);
+        }
+    }
 
-        if (!idRecebidos.isEmpty()) {
-            throw new NotFoundException("Autores não encontrados: " + idRecebidos);
+    private void validarIsbnUnico(String isbn){
+        if(repository.existsByIsbn(isbn)) {
+            throw new BusinessException("Já existe um livro cadastrado com o ISBN informado");
         }
     }
 }

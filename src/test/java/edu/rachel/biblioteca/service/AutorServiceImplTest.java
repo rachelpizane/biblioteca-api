@@ -42,16 +42,16 @@ class AutorServiceImplTest {
     @Mock
     private AutorRepository repository;
 
-    private AutorMapper mapper;
-
+    @Mock
     private AutorValidator validator;
+
+    private AutorMapper mapper;
 
     private AutorServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper =  Mappers.getMapper(AutorMapper.class);
-        validator = new AutorValidator(repository);
         service = new AutorServiceImpl(validator, mapper, repository);
     }
 
@@ -74,11 +74,13 @@ class AutorServiceImplTest {
         void deveLancarBusinessExceptionQuandoExistirAutorComCPF(){
             AutorRequestDTO request = AutorMock.getAutorRequestDTOMock();
 
-            when(repository.existsByCpf(request.cpf())).thenReturn(true);
+            doThrow(new BusinessException("Autor já existe"))
+                    .when(validator).validarCadastro(request);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarAutor(request);
             });
+
             verify(repository, never()).save(any(Autor.class));
         }
     }

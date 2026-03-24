@@ -18,6 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Service
 public class LocatarioServiceImpl implements LocatarioService {
+
     private final LocatarioValidator validator;
     private final LocatarioMapper mapper;
     private final LocatarioRepository locatarioRepository;
@@ -25,7 +26,7 @@ public class LocatarioServiceImpl implements LocatarioService {
 
     @Override
     public LocatarioResponseDTO cadastrarLocatario(LocatarioRequestDTO request) {
-        validator.validar(request);
+        validator.validarCadastro(request);
         Locatario locatarioSalvo = locatarioRepository.save(mapper.paraEntidade(request));
 
         return mapper.paraDto(locatarioSalvo);

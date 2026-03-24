@@ -24,9 +24,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -36,7 +33,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -55,13 +51,14 @@ class AluguelServiceImplTest {
     @Mock
     private AluguelRepository aluguelRepository;
 
+    @Mock
+    private AluguelValidator aluguelValidator;
+
     private LocatarioMapper locatarioMapper;
 
     private LivroMapper livroMapper;
 
     private AluguelMapper aluguelMapper;
-
-    private AluguelValidator validator;
 
     private AluguelServiceImpl service;
 
@@ -74,8 +71,7 @@ class AluguelServiceImplTest {
         ReflectionTestUtils.setField(aluguelMapper, "locatarioMapper", locatarioMapper);
         ReflectionTestUtils.setField(aluguelMapper, "livroMapper", livroMapper);
 
-        validator = new AluguelValidator(locatarioRepository, livroRepository);
-        service = new AluguelServiceImpl(validator, aluguelMapper, aluguelRepository, livroRepository, locatarioRepository);
+        service = new AluguelServiceImpl(aluguelValidator, aluguelMapper, aluguelRepository, livroRepository, locatarioRepository);
     }
 
     @Nested
@@ -90,11 +86,6 @@ class AluguelServiceImplTest {
 
             AluguelRequestDTO request = AluguelMock.getRequestComDataDevolucaoEIds(null, locatarioId, livrosId);
             Aluguel aluguel = AluguelMock.getAluguelMock(locatarioId, livrosId);
-
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(livrosId);
-            when(livroRepository.findLivrosIdsComAluguelPorStatus(
-                    livrosId, StatusEnum.EM_ANDAMENTO)).thenReturn(List.of());
 
             when(locatarioRepository.findById(locatarioId)).thenReturn(Optional.of(locatario));
             when(livroRepository.findAllById(livrosId)).thenReturn(List.of(livro));
@@ -117,8 +108,8 @@ class AluguelServiceImplTest {
             List<UUID> livrosId = List.of(UUID.randomUUID());
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatarioId, livrosId);
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(false);
-
+            doThrow(new NotFoundException("Locatário não encontrado"))
+                    .when(aluguelValidator).validarCadastro(request);
 
             assertThrows(NotFoundException.class, () -> {
                 service.cadastrarAluguel(request);
@@ -132,8 +123,8 @@ class AluguelServiceImplTest {
             List<UUID> livrosId = List.of(UUID.randomUUID());
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatarioId, livrosId);
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(List.of());
+            doThrow(new NotFoundException("Livro não encontrado"))
+                    .when(aluguelValidator).validarCadastro(request);
 
             assertThrows(NotFoundException.class, () -> {
                 service.cadastrarAluguel(request);
@@ -147,10 +138,8 @@ class AluguelServiceImplTest {
             List<UUID> livrosId = List.of(UUID.randomUUID());
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatarioId, livrosId);
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(livrosId);
-            when(livroRepository.findLivrosIdsComAluguelPorStatus(
-                    livrosId, StatusEnum.EM_ANDAMENTO)).thenReturn(livrosId);
+            doThrow(new LivroAlugadoException("Livro alugado"))
+                    .when(aluguelValidator).validarCadastro(request);
 
             assertThrows(LivroAlugadoException.class, () -> {
                 service.cadastrarAluguel(request);
@@ -163,11 +152,6 @@ class AluguelServiceImplTest {
             UUID locatarioId = UUID.randomUUID();
             List<UUID> livrosId = List.of(UUID.randomUUID());
             AluguelRequestDTO request = AluguelMock.getAluguelRequestDTOMock(locatarioId, livrosId);
-
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(livroRepository.findLivrosIdsByIdIn(livrosId)).thenReturn(livrosId);
-            when(livroRepository.findLivrosIdsComAluguelPorStatus(
-                    livrosId, StatusEnum.EM_ANDAMENTO)).thenReturn(List.of());
 
             when(locatarioRepository.findById(locatarioId)).thenReturn(Optional.empty());
 
@@ -222,29 +206,22 @@ class AluguelServiceImplTest {
             assertEquals(statusNovo, aluguelSalvo.getStatus());
         }
 
-        @ParameterizedTest
-        @MethodSource("statusInvalidos")
-        void deveLancarStatusInvalidoExceptionQuandoStatusInvalido(StatusEnum statuAtual, StatusEnum statusNovo){
-            Aluguel aluguel = AluguelMock.getAluguelMock(UUID.randomUUID(), List.of(UUID.randomUUID()));
-            aluguel.setStatus(statuAtual);
+        @Test
+        void deveLancarStatusInvalidoExceptionQuandoStatusInvalido(){
+            StatusEnum statusNovo = StatusEnum.EM_ANDAMENTO;
 
-            when(aluguelRepository.findById(aluguel.getId())).thenReturn(Optional.of(aluguel));
+            Aluguel aluguel = AluguelMock.getAluguelMock(UUID.randomUUID(), List.of(UUID.randomUUID()));
+            aluguel.setStatus(StatusEnum.FINALIZADO);
+
+            UUID aluguelId = aluguel.getId();
+
+            when(aluguelRepository.findById(aluguelId)).thenReturn(Optional.of(aluguel));
+            doThrow(new StatusInvalidoException("Status inválido"))
+                    .when(aluguelValidator).validarAtualizacaoStatus(aluguel, statusNovo);
 
             assertThrows(StatusInvalidoException.class, () -> {
-                service.atualizarStatusAluguel(aluguel.getId(), statusNovo);
+                service.atualizarStatusAluguel(aluguelId, statusNovo);
             });
-
-        }
-
-        static Stream<Arguments> statusInvalidos() {
-            return Stream.of(
-                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.FINALIZADO),
-                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.CANCELADO),
-                    Arguments.of(StatusEnum.CANCELADO, StatusEnum.CANCELADO),
-                    Arguments.of(StatusEnum.CANCELADO, StatusEnum.FINALIZADO),
-                    Arguments.of(StatusEnum.CANCELADO, StatusEnum.EM_ANDAMENTO),
-                    Arguments.of(StatusEnum.FINALIZADO, StatusEnum.EM_ANDAMENTO)
-            );
         }
     }
 }

@@ -2,7 +2,6 @@ package edu.rachel.biblioteca.service;
 
 import edu.rachel.biblioteca.dto.LocatarioResponseDTO;
 import edu.rachel.biblioteca.dto.LocatarioRequestDTO;
-import edu.rachel.biblioteca.enums.StatusEnum;
 import edu.rachel.biblioteca.exception.BusinessException;
 import edu.rachel.biblioteca.exception.ConflictBusinessException;
 import edu.rachel.biblioteca.exception.NotFoundException;
@@ -36,17 +35,17 @@ class LocatarioServiceImplTest {
     
     @Mock
     private AluguelRepository aluguelRepository;
-    
-    private LocatarioMapper mapper;
 
+    @Mock
     private LocatarioValidator validator;
+
+    private LocatarioMapper mapper;
 
     private LocatarioServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper =  Mappers.getMapper(LocatarioMapper.class);
-        validator = new LocatarioValidator(aluguelRepository, locatarioRepository);
         service = new LocatarioServiceImpl(validator, mapper, locatarioRepository, aluguelRepository);
     }
 
@@ -66,24 +65,11 @@ class LocatarioServiceImplTest {
         }
 
         @Test
-        void deveLancarBusinessExceptionQuandoExistirLocatarioComCPF(){
+        void deveLancarBusinessExceptionQuandoExistirLocatarioComCPFOuEmail(){
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), null)).thenReturn(true);
-
-            assertThrows(BusinessException.class, () -> {
-                service.cadastrarLocatario(request);
-            });
-
-            verify(locatarioRepository, never()).save(any(Locatario.class));
-        }
-
-        @Test
-        void deveLancarBusinessExceptionQuandoExistirLocatarioComEmail(){
-            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
-
-            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), null)).thenReturn(false);
-            when(locatarioRepository.existsByEmailIgnoreCaseAndIdNotNullable(request.email(), null)).thenReturn(true);
+            doThrow(new BusinessException("Já existe um locatário cadastrado com o CPF ou email informado"))
+                    .when(validator).validarCadastro(request);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarLocatario(request);
@@ -102,7 +88,6 @@ class LocatarioServiceImplTest {
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
             Locatario locatario = LocatarioMock.getLocatarioMock(locatarioId);
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
             when(locatarioRepository.save(any(Locatario.class))).thenReturn(locatario);
 
             LocatarioResponseDTO response = service.atualizarLocatario(locatarioId, request);
@@ -116,38 +101,24 @@ class LocatarioServiceImplTest {
             UUID idInvalid = UUID.randomUUID();
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(locatarioRepository.existsById(idInvalid)).thenReturn(false);
+            doThrow(new NotFoundException("Locatário não encontrado"))
+                    .when(validator).validarAtualizacao(idInvalid, request);
 
             assertThrows(NotFoundException.class, () -> {
                 service.atualizarLocatario(idInvalid, request);
-            });
-        }
-
-        @Test
-        void deveLancarBusinessExceptionQuandoExistirLocatarioComCPF(){
-            UUID locatarioId = UUID.randomUUID();
-
-            LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
-
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), locatarioId)).thenReturn(true);
-
-            assertThrows(BusinessException.class, () -> {
-                service.atualizarLocatario(locatarioId, request);
             });
 
             verify(locatarioRepository, never()).save(any(Locatario.class));
         }
 
         @Test
-        void deveLancarBusinessExceptionQuandoExistirLocatarioComEmail(){
+        void deveLancarBusinessExceptionQuandoExistirLocatarioComCPFOuEmail(){
             UUID locatarioId = UUID.randomUUID();
 
             LocatarioRequestDTO request = LocatarioMock.getLocatarioRequestDTOMock();
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(locatarioRepository.existsByCpfAndIdNotNullable(request.cpf(), locatarioId)).thenReturn(false);
-            when(locatarioRepository.existsByEmailIgnoreCaseAndIdNotNullable(request.email(), locatarioId)).thenReturn(true);
+            doThrow(new BusinessException("Já existe um locatário cadastrado com o CPF ou email informado"))
+                    .when(validator).validarAtualizacao(locatarioId, request);
 
             assertThrows(BusinessException.class, () -> {
                 service.atualizarLocatario(locatarioId, request);
@@ -187,10 +158,6 @@ class LocatarioServiceImplTest {
         void deveExcluirLocatarioComSucesso(){
             Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
 
-            when(locatarioRepository.existsById(locatario.getId())).thenReturn(true);
-            when(aluguelRepository.existsByLocatarioIdAndStatus(locatario.getId(), StatusEnum.EM_ANDAMENTO))
-                    .thenReturn(false);
-
             service.deletarLocatario(locatario.getId());
 
             verify(aluguelRepository, times(1)).deleteByLocatarioId(locatario.getId());
@@ -201,7 +168,8 @@ class LocatarioServiceImplTest {
         void deveLancarNotFoundExceptionQuandoLocatarioNaoExistir(){
             UUID idInvalid = UUID.randomUUID();
 
-            when(locatarioRepository.existsById(idInvalid)).thenReturn(false);
+            doThrow(new NotFoundException("Locatário não encontrado"))
+                    .when(validator).validarExclusao(idInvalid);
 
             assertThrows(NotFoundException.class, () -> {
                 service.deletarLocatario(idInvalid);
@@ -215,9 +183,8 @@ class LocatarioServiceImplTest {
             Locatario locatario = LocatarioMock.getLocatarioMock(UUID.randomUUID());
             UUID locatarioId = locatario.getId();
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
-            when(aluguelRepository.existsByLocatarioIdAndStatus(locatarioId, StatusEnum.EM_ANDAMENTO))
-                    .thenReturn(true);
+            doThrow(new ConflictBusinessException("Locatário possui aluguéis em andamento"))
+                    .when(validator).validarExclusao(locatarioId);
 
             assertThrows(ConflictBusinessException.class, () -> {
                 service.deletarLocatario(locatarioId);

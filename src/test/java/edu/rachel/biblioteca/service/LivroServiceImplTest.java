@@ -16,9 +16,7 @@ import edu.rachel.biblioteca.repository.AutorRepository;
 import edu.rachel.biblioteca.repository.LivroRepository;
 import edu.rachel.biblioteca.repository.LocatarioRepository;
 import edu.rachel.biblioteca.service.impl.LivroServiceImpl;
-import edu.rachel.biblioteca.validator.AutorValidator;
 import edu.rachel.biblioteca.validator.LivroValidator;
-import edu.rachel.biblioteca.validator.LocatarioValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -57,30 +55,23 @@ class LivroServiceImplTest {
     @Mock
     private AluguelRepository aluguelRepository;
 
+    @Mock
+    private LivroValidator validator;
+
     private AutorMapper autorMapper;
 
     private LivroMapper livroMapper;
-
-    private LivroValidator livroValidator;
-
-    private AutorValidator autorValidator;
-
-    private LocatarioValidator locatarioValidator;
 
     private LivroServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        autorMapper = Mappers.getMapper(AutorMapper.class);
         livroMapper = Mappers.getMapper(LivroMapper.class);
+        autorMapper = Mappers.getMapper(AutorMapper.class);
+
         ReflectionTestUtils.setField(livroMapper, "autorMapper", autorMapper);
 
-        livroValidator = new LivroValidator(livroRepository, autorRepository);
-        autorValidator = new AutorValidator(autorRepository);
-        locatarioValidator = new LocatarioValidator(aluguelRepository, locatarioRepository);
-
-        service = new LivroServiceImpl(locatarioValidator, autorValidator, livroValidator,
-                livroMapper, autorRepository, livroRepository);
+        service = new LivroServiceImpl(validator, livroMapper, autorRepository, livroRepository);
     }
 
     @Nested
@@ -106,24 +97,27 @@ class LivroServiceImplTest {
         void deveLancarBusinessExceptionQuandoExistirLivroComIsbn(){
             LivroRequestDTO request = LivroMock.getLivroRequestDTOMock(List.of(UUID.randomUUID()));
 
-            when(livroRepository.existsByIsbn(request.isbn())).thenReturn(true);
+            doThrow(new BusinessException("Livro já existe"))
+                    .when(validator).validarCadastro(request);
 
             assertThrows(BusinessException.class, () -> {
                 service.cadastrarLivro(request);
             });
+
             verify(livroRepository, never()).save(any(Livro.class));
         }
 
         @Test
         void deveLancarNotFoundExceptionQuandoAutoresNaoEncontrados(){
-            List<UUID> autoresIds = List.of(UUID.randomUUID());
-            LivroRequestDTO request = LivroMock.getLivroRequestDTOMock(autoresIds);
+            LivroRequestDTO request = LivroMock.getLivroRequestDTOMock(List.of(UUID.randomUUID()));
 
-            when(autorRepository.findAllById(autoresIds)).thenReturn(List.of());
+            doThrow(new NotFoundException("Autor não encontrado"))
+                    .when(validator).validarCadastro(request);
 
             assertThrows(NotFoundException.class, () -> {
                 service.cadastrarLivro(request);
             });
+
             verify(livroRepository, never()).save(any(Livro.class));
         }
     }
@@ -230,7 +224,6 @@ class LivroServiceImplTest {
             UUID autorId = UUID.randomUUID();
             Livro livro = LivroMock.getLivroMock(UUID.randomUUID(), autorId);
 
-            when(autorRepository.existsById(autorId)).thenReturn(true);
             when(livroRepository.findLivrosPorAutorId(autorId)).thenReturn(List.of(livro));
 
             List<LivroResumoDTO> livros = service.buscarLivrosPorAutor(autorId);
@@ -243,7 +236,8 @@ class LivroServiceImplTest {
         void deveLancarNotFoundExceptionQuandoAutorNaoEncontrado(){
             UUID idInvalid = UUID.randomUUID();
 
-            when(autorRepository.existsById(idInvalid)).thenReturn(false);
+            doThrow(new NotFoundException("Autor não encontrado"))
+                    .when(validator).validarAutorExistente(idInvalid);
 
             assertThrows(NotFoundException.class, () -> {
                 service.buscarLivrosPorAutor(idInvalid);
@@ -258,7 +252,6 @@ class LivroServiceImplTest {
             UUID locatarioId = UUID.randomUUID();
             Livro livro = LivroMock.getLivroMock(UUID.randomUUID(), UUID.randomUUID());
 
-            when(locatarioRepository.existsById(locatarioId)).thenReturn(true);
             when(livroRepository.findLivrosAlugadosPorLocatarioId(locatarioId)).thenReturn(List.of(livro));
 
             List<LivroResumoDTO> livros = service.buscarLivrosPorLocatario(locatarioId);
@@ -271,7 +264,8 @@ class LivroServiceImplTest {
         void deveLancarNotFoundExceptionQuandoLocatarioNaoEncontrado(){
             UUID idInvalid = UUID.randomUUID();
 
-            when(locatarioRepository.existsById(idInvalid)).thenReturn(false);
+            doThrow(new NotFoundException("Locatário não encontrado"))
+                    .when(validator).validarLocatarioExistente(idInvalid);
 
             assertThrows(NotFoundException.class, () -> {
                 service.buscarLivrosPorLocatario(idInvalid);

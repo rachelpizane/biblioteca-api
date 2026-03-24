@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 public class AluguelServiceImpl implements AluguelService {
+
     private final AluguelValidator validator;
     private final AluguelMapper mapper;
     private final AluguelRepository aluguelRepository;
@@ -34,7 +35,7 @@ public class AluguelServiceImpl implements AluguelService {
 
     @Override
     public AluguelResponseDTO cadastrarAluguel(AluguelRequestDTO request) {
-        validator.validar(request);
+        validator.validarCadastro(request);
 
         Aluguel aluguel = criarAluguel(request);
         Aluguel aluguelSalvo = aluguelRepository.save(aluguel);
@@ -51,7 +52,7 @@ public class AluguelServiceImpl implements AluguelService {
     public StatusResponseDTO atualizarStatusAluguel(UUID id, StatusEnum statusNovo){
         Aluguel aluguel = buscarAluguelByID(id);
 
-        validator.validar(aluguel, statusNovo);
+        validator.validarAtualizacaoStatus(aluguel, statusNovo);
 
         aluguel.setStatus(statusNovo);
         Aluguel aluguelAtualizado = aluguelRepository.save(aluguel);

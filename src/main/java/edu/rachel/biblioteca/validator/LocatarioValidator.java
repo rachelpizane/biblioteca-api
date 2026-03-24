@@ -15,10 +15,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Component
 public class LocatarioValidator {
-    private final AluguelRepository aluguelRepository;
+    
     private final LocatarioRepository locatarioRepository;
+    private final AluguelRepository aluguelRepository;
 
-    public void validar(LocatarioRequestDTO request) {
+    public void validarCadastro(LocatarioRequestDTO request) {
         validarCpfUnico(request.cpf());
         validarEmailUnico(request.email());
     }
@@ -31,7 +32,7 @@ public class LocatarioValidator {
 
     public void validarExclusao(UUID id) {
         validarExistencia(id);
-        validarLocatarioSemAluguelEmAndamento(id);
+        validarLocatarioSemAlugueisEmAndamento(id);
     }
 
     public void validarExistencia(UUID id) {
@@ -39,13 +40,7 @@ public class LocatarioValidator {
             throw new NotFoundException("Locatário não encontrado");
         }
     }
-
-    private void validarLocatarioSemAluguelEmAndamento(UUID id){
-        if(aluguelRepository.existsByLocatarioIdAndStatus(id, StatusEnum.EM_ANDAMENTO)) {
-            throw new ConflictBusinessException("Locatário possui aluguéis em andamento");
-        }
-    }
-
+    
     private void validarCpfUnico(String cpf) {
         validarCpfUnico(cpf, null);
     }
@@ -59,10 +54,16 @@ public class LocatarioValidator {
             throw new BusinessException("Já existe um locatário cadastrado com o CPF informado");
         }
     }
-
+    
     private void validarEmailUnico(String email, UUID id){
         if(locatarioRepository.existsByEmailIgnoreCaseAndIdNotNullable(email, id)) {
             throw new BusinessException("Já existe um locatário cadastrado com o e-mail informado");
+        }
+    }
+
+    private void validarLocatarioSemAlugueisEmAndamento(UUID locatarioId){
+        if(aluguelRepository.existsByLocatarioIdAndStatus(locatarioId, StatusEnum.EM_ANDAMENTO)) {
+            throw new ConflictBusinessException("Locatário possui aluguéis em andamento");
         }
     }
 }
